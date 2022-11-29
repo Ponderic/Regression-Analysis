@@ -1,0 +1,397 @@
+---
+title: "Assignment_Two Q2"
+author: Author - Eric Opoku 
+date: November 11, 2022
+output: pdf_document
+fontsize: 12pt
+geometry: margin=1in
+keep_tex: true
+#bibliography: packages.bib
+---
+
+
+
+```{r setup, include=FALSE, comment=NA}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.width = 8,
+	message = FALSE,
+	warning = FALSE,
+	collapse = TRUE
+)
+```
+
+
+```{r header, echo=TRUE, message=FALSE, warning=FALSE, comment=NA}
+
+
+name<- Sys.info()
+name[7]
+```
+
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+
+library(rlang)
+library(dplyr)
+library(kableExtra)
+library(ggdag)      # For plotting DAGs
+library(dagitty)    # For working with DAG logic
+library(modelsummary) # For making regression tables
+library(AER) # this package has lots of applied metrics packages
+library(foreign) 
+# Helpful for reading in data from Stata or other code languages 
+library(lubridate) # For figures
+library(stargazer) # For tables
+library(data.table)  #data manipulation and wrangling
+library(lme4)
+library(psych)
+library(readxl) # Read in data
+library(expss) #value labelling from spss style
+library(readstata13)
+library(marginaleffects) # To calculate marginal effects
+library(knitr) # Alternative table package
+set.seed(03262020) # random number generators; same numbers across machines
+```
+
+```{r message=FALSE, warning=FALSE, echo=TRUE, comment=NA}
+#https://stat.ethz.ch/pipermail/r-help/2017-August/448710.html
+
+
+load("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 2/Dataset2b_RCT_AdditionalVariables.RData", verbose = TRUE)
+
+file.exists("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 2/Dataset2b_RCT_AdditionalVariables.RData")
+
+
+ls()
+
+mydata<-addvars
+
+#library(readr)
+library(R.utils)
+saveObject(addvars, "C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 2/Dataset2b_RCT_AdditionalVariables.csv")
+mydata1 <- loadObject("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 2/Dataset2b_RCT_AdditionalVariables.csv")
+
+
+#name of stored object is addvars
+
+
+mydata2 <- read.dta("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 2/Dataset2b_RCT.dta")
+
+
+mydata2<- select (mydata2, RCT_ID_TV2, post_ie_charges_180_IP, 
+                  Ireadmit2_180_100, 
+                  Iaa_100, Ihispanic_100, Iwhite_100, Irace_other_100) 
+
+mydata1<- select (mydata1, RCT_ID_TV2, link2care_duration, Icontrol, Itreatment, 
+                  Imale) 
+
+
+mydata<- merge(mydata1, mydata2, by = c("RCT_ID_TV2"), all =T)
+
+
+mydata <- mydata %>% mutate(treated=ifelse(link2care_duration>89,1,0))
+mydata <- mydata %>% mutate(random=ifelse(Itreatment==1,1,0))
+mydata <- mydata %>%mutate(rand_treated=ifelse(random==1&treated==1,1,0))
+mydata <- mydata %>% mutate(rand_untreated=ifelse(random==1&treated==0,1,0))
+mydata <- mydata %>% mutate(male=ifelse(Imale==1,1,0))
+mydata <- mydata %>% mutate(african_american=ifelse(Iaa_100==100,1,0))
+mydata <- mydata %>% mutate(hispanic=ifelse(Ihispanic_100==100,1,0))
+mydata <- mydata %>%mutate(white=ifelse(Iwhite_100 ==100,1,0))
+mydata <- mydata %>% mutate(other=ifelse(Irace_other_100 ==100,1,0))
+mydata <- mydata %>% mutate(readmit=ifelse(Ireadmit2_180_100==100,1,0))
+
+#correct name
+#mydata <- select and merge
+
+ #merge the Dataset 2b RCt and also the RCT additional variables to create the; 
+#Ireadmit2_180_100 and post_ie_charges_180_IP
+
+
+
+
+
+```
+
+\newpage
+#Question A 
+\par
+Voluntary participation in the program introduces selection bias (or endogeneity) into the RCT. In the DAG, gender affects both program participation and the rate of 180-day readmission. It also affects the rate of 180-day readmission through program participation. \par 
+It is possible that there are unobserved characteristics of individuals that affect both individual program take up and the rate of hospital readmission and it may account for any association between program participation and the 180-day hospital readmission rates. For example, unhealthy individuals who have high likelihood of re-admissions might self-select themselves into the program and hence, its features might have little causal impact on their actions or behaviors and outcomes. \par
+In addition, super-utilizers of health care or super-spenders who do not participate in the program might be fundamentally different on unobserved characteristics from those who actually participated. This process of program participation must be accounted for, if not, the observed association between program participation and 180-day readmission rates likely reflect the effect of unmeasured individual or family characteristics that motivated program participation.\par
+It is worth mentioning here that since participation is voluntary, we may not be able to observe the potential outcome of individuals who do not participate in the program. Hence there will be sample selection. \par
+In conclusion, voluntary participation biases the estimates and makes them inconsistent. The 'selection effects' must be separated from the 'program effects'.\par
+\pagebreak
+
+
+```{r DAG, message=FALSE, warning=FALSE, comment=NA}
+
+
+
+the_dag <- dagify(  # Create super basic DAG
+  readmit ~ male,
+  rand_treated ~ male,
+  readmit ~ rand_treated,
+  exposure = "rand_treated",
+  outcome = "readmit",    
+  labels = c(readmit = "Rate of 180-day readmission",
+             rand_treated = "Program participation",
+             male="Gender"))
+
+set.seed(26445111)  #prevents DAG shape from changing
+ggdag_status(the_dag, use_labels= "label",
+             text = FALSE) + theme_dag() 
+```
+\newpage
+#Question B
+\par
+Using the potential outcome framework, let \textit{Z} (i.e., the instrumental variable) represent whether an individual \textit{i} was initially randomized to take up the program (Z=1) or not (Z=0). 
+Let \textit{D} denote the treatment- whether an individual \textit{i} actually participated or took up the program (D=1) or not (D=0). \textit{D} is a potentially endogenous variable in the model. 
+Let \textit{Y} denote the outcome- the rate of 180-day hospital readmission of individual \textit{i}. Let  \textit{X} denote control variables or covariates. \par
+Let Y_{i}(D_{i}=1) denote the potential outcome that would be observed for individual \textit{i} if he/she had actually participated in the program. However, we would not be able to observe Y_{i}(D_{i}=1) for individual \textit{i} if he/she did not actually participate in the program. Thus, Y_{i}(D_{i}=1) would denote unobserved, counterfactual outcome if he/she had not participated (control group). 
+The treatment effect for individual \textit{i} is the difference between his/her potential outcomes under treatment and control: Y_{i}(D_{i}=1)-Y_{i}(D_{i}=0). Meanwhile, only one of these potential outcomes is observed (Holland, 1986; Felton and Stewart, 2022). \par
+Let D_{i}(Z_{i})=1) denote the potential treatment (i.e., actual program take up or not) that would be observed if individual \textit{i} had been randomly assigned to the program rather than to the control group. Y_{i}(D_{i}=1, Z_{i})=1) represents the potential outcome that would be observed for individual \textit{i} had he/she had been randomized into the program and had also actually taken up the program. \par
+
+
+The identification of the randomization as instrumental variable is analyzed based on six assumptions: Relevance, Exclusion restriction, Exogeneity, unconfoundness, monotonicity, stableunit-treatment-value assumption (SUTVA) and positivity.\par
+Relevance depicts that being randomized into the program has a causal effect on whether individual \textit{i} participated in the program or not and such impact is expected in this RCT. Thus: E[D_{i}(Z_{i})=1)-D_{i}(Z_{i})=0)] is not equal to zero. \par 
+Unconfounded (or exogenous) instrument means that the instrument (i.e., randomization) can share no unmeasured common causes with neither the outcome (i..e, rate of 180-day readmission) nor the treatment (i.e., program participation). This assumption is also satisfied in the model as the IV is randomized. \par
+The exclusion restriction requires that the instrumental variable has no effect on the  outcome except through the treatment. Here, the randomization instrumental variable affects the rate of 180-day hospital readmission (i.e., outcome) only through the program participation (i.e., treatment).  \par 
+Monotonicity: Let's identify four plausible "compliance types". Assume people are randomized to the control and treatment arms or groups. Hence, randomization is unconfounded since participants are assigned randomly.\par
+Neuer is a \textit{never taker} if, regardless of the group he is randomly \textit{assigned} to, he is never going to \textit{participate} in the program itself. Whitaker is a \textit{always taker} if, regardless of the group he is randomly \textit{assigned} to, he is always going to \textit{participate} in the program. Collins is a \textit{complier} if he will \textit{participate} in the program if he is assigned to the treatment arm but he will not participate if he was randomized into the control group. Daphne is a \textit{defier} if she would participate in the program even though she was initially randomized not to join the treatment group but would not participate even if she was initially randomized to join the treatment group. The monotonicity assumption, which is untestable, expects that there are no \textit{defiers} in the sample (Felton and Stewart, 2022).
+The SUTVA assumption expects no \textit{hidden} versions of the instrument or treatment and strikes out interference across units.\par
+Positivity requires that, in every stratum of measured confounders (i.e., those necessary for unconfoundedness
+of the instrument to hold) at least some
+units receive the instrument (Aronow and Miller, 2019). \par
+To the best of my knowledge, the randomization instrumental variable meets the testable assumptions.
+
+\newpage
+##Question C
+\par
+The link2care_duration is left-skewed. There are lesser individuals who were randomized in the control group (n=389), a dummy variable, relative to those who were randomized into the treatment group (n=393). Those who were randomized and treated (n=194), a dummy variable,  were less relative to their counterparts (n=577). Those who were randomized but not treated (n=188), a dummy variable, were lesser relative to their counterparts (n=583).
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+
+
+#mydata <- mydata %>% mutate(coverage = ifelse(q0411<4, 1, 0))
+#summary(mydata$treated)
+#table(mydata$treated)
+
+#table(mydata$link2care_duration)
+hist(mydata$link2care_duration, freq=F) #Density
+hist(mydata$link2care_duration, freq=T) #Frequency
+
+#summary of control groups
+summary(mydata$Icontrol)
+table(mydata$Icontrol, exclude = NA)
+describe(mydata$Icontrol)
+str(mydata$Icontrol)
+
+#interact Itreatment with treated variable
+summary(mydata$Itreatment)
+#table(mydata$Itreatment)
+
+#create randomization
+#table(mydata$random)
+
+#summary of randomized and treated
+summary(mydata$rand_treated)
+table(mydata$rand_treated, exclude = NA)
+describe(mydata$rand_treated)
+str(mydata$rand_treated)
+
+
+#summary of randomized but not treated
+summary(mydata$rand_untreated)
+table(mydata$rand_untreated, exclude = NA)
+describe(mydata$rand_untreated)
+str(mydata$rand_untreated)
+
+#confirmation with cross tabulation
+#xtabs(~random+treated, data=mydata)
+
+#desc_table
+
+desc_table = data.frame(
+  Measure = c("Control", "Randomized and Treated", 
+              "Randomized but not Treated"),
+   M_1  = c(782, 771, 771),
+  M_2  = c(389, 194, 188))
+
+
+kable(
+  desc_table,
+  col.names = c("Measure","*Observation*", "*Number of Values*"),
+  digits = 2,
+  caption = "Summary of Variables"
+  )
+
+
+```
+\newpage
+##QUESTION D
+\par
+The coefficient (in the Logistic regression) means that there is a positive association between randomization and 'actual' take up or participation of the program. The F-statistic is greater than 104.7 hence the instrument is strong. This regression highlights the 'Relevance' assumption. Thus, the instrumental variable is expected to have significant effect on the treatment variable.
+\pagebreak
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+
+table(mydata$treated)
+
+# First stage regression of IV: take up on randomization
+
+
+m1 <- glm(rand_treated ~ random,data=mydata,
+          family='binomial'(link='logit'))
+
+msummary(list("First Stage-Logit"=m1),
+        vcov=c("robust"),
+         tab_header=c("First Stage"),
+         stars=c('*' = .1, '**' = .05, '***' = .01))
+
+
+```
+
+\newpage
+##QUESTION E
+\par
+There is not much difference between both the naive and the 2SLS models. Contrary to what was expected, the F statistics and *R-squared* for the naive model were higher than for the 2SLS model. Also, the estimates of the treatment variables is not significant for the 2SLS model but it is significant for the naive model (at 10 percent significance level). This shows that failure to account for potential endogeneity can lead to misleading results.
+
+```{r }
+
+
+
+
+#first stage #logit #binary treatment
+#random is the IV
+#run endogenous variable on the IV and controls
+#run that probit
+
+m1r <- glm(rand_treated ~ random+african_american+hispanic+white+male,
+           data=mydata,
+          family='binomial'(link='probit'))
+
+mydata$pred_x_X <- predict(m1r, mydata) 
+
+#Forbidden regresion #sticking predicted values into the 2nd stage
+forbid <- lm(post_ie_charges_180_IP ~ pred_x_X+african_american+hispanic+white+
+               male,data=mydata)  
+
+
+##The 2SLS #predicted values in place of instrument
+m1_second <- lm(rand_treated ~ pred_x_X+african_american+hispanic+white+male,
+                data=mydata)
+
+mydata$pred_pred_x <- predict(m1_second, mydata) 
+
+
+#2 nd stage
+# Regress outcome on pred_X
+m3 <- lm(post_ie_charges_180_IP ~ pred_pred_x+african_american+hispanic+white+
+           male,data=mydata)  
+
+
+#naive
+m2 <- lm(post_ie_charges_180_IP ~ rand_treated+african_american+hispanic+white+
+           male,data=mydata) #Linear model
+msummary(list("Naive"=m2),
+         vcov=c("robust"),
+         stars=c('*' = .1, '**' = .05, '***' = .01))
+
+#Combination
+msummary(list("Naive"=m2,"Forbidden"=forbid,"2SLS"=m3),
+         vcov=c("robust","robust", "robust"),
+         stars=c('*' = .1, '**' = .05, '***' = .01)) 
+
+
+```
+
+\newpage
+#QUESTION F
+\par
+An instrumental variable helps to recover the Local Average Treatment Effects (LATE). The LATE, also referred to as the complier average causal effect (CACE), denotes the treatment effect for the subset of the sample that participated in the program when they were initially randomized to do so (i.e., the compliers). This helps to fulfil the monotonicity assumption of eliminating *defiers*. \par 
+Meanwhile, the LATE is only policy or economically relevant if it has been proved in the literature that many individuals comply to such programs. There is not enough information to conclude on this so I would say that the LATE is not economically relevant.
+
+\pagebreak
+
+\newpage
+#QUESTION G
+\par
+The estimate for the treatment variable in the 'Naive-OLS' is significant (0.087) even though it is not significant in the 2SLS model. Their estimates show a positive association between program participation and the rate of 180-day hospital readmission. However, though insignificant, the estimates of the Bivariate regression shows a negative association between program participation and the rate of 180-day hospital readmission. 
+\pagebreak
+```{r message=TRUE, warning=FALSE, comment=NA}
+
+library(GJRM)
+table(mydata$readmit)
+
+#male and race are the restricted variables
+out2<-gjrm(list(rand_treated ~  random+african_american+hispanic+white,
+               readmit ~ rand_treated+random+male),  #rand_treated
+          data = mydata,
+          margins = c("probit", "probit"),
+          Model = "B")
+conv.check(out2)
+summary(out2)
+
+#AIC(out2); BIC(out2)
+## Testing the hypothesis of absence of endogeneity post estimation...
+#gt.bpm(out2)
+## treatment effect, risk ratio and odds ratio with CIs and random effects
+mb(mydata$rand_treated, mydata$Ireadmit2_180_100, Model = "B")
+AT(out2, nm.end = "rand_treated", hd.plot = TRUE)
+RR(out2, nm.end = "rand_treated")
+OR(out2, nm.end = "rand_treated")
+#AT(out2, nm.end = "rand_treated", type = "univariate")
+#re.imp <- imputeCounter(out2, m = 10, "rand_treated")   #Random effects
+#random effects
+#re.imp$AT
+
+#compare with below
+# iii)
+
+# ols #naive
+m6_ols <- lm(readmit ~ rand_treated+african_american+hispanic+white+male,
+             data=mydata)  
+
+# binary IV regression
+m5_first <- glm(rand_treated ~ random+african_american+hispanic+white+male,
+                data=mydata, family='binomial'(link='probit'))
+
+#predict X with Z: 
+mydata$pred_x_naive <- predict(m5_first, mydata) 
+
+#replace IV with binnary IV prediction  #first stage
+m5_first_naive <- lm(rand_treated ~ pred_x_naive+african_american+hispanic+white
+                     +male,data=mydata)
+
+#predict X with Z: 
+mydata$the_pred_x_naive <- predict(m5_first_naive, mydata) 
+
+
+# Regress outcome on pred_X
+m6_second_naive <- lm(readmit ~ the_pred_x_naive+african_american+hispanic
+                      +white+male,data=mydata)  
+
+msummary(list("Naive-OLS"=m6_ols,"Naive-2SLS"=m6_second_naive),
+         vcov=c("robust","robust"),
+         stars=c('*' = .1, '**' = .05, '***' = .01)) 
+
+```
+
+\newpage
+#QUESTION H
+\par
+The results suggest that there is a negative association (insignificant) between take up of the program and the rate of 180-day readmission (for the Bivariate regression model). Hence, it can be deduced that the program is not effective in reducing the rate of 180-day readmission.\par
+In addition, the 2SLS also showed that there is an insignificant association between program participation and superutilization spending. Hence, it can be inferred that the program is not effective in reducing superutilization spending.
+\newpage
+
+
+```{r References,  echo=TRUE, message=FALSE, comment=NA, results='asis'}
+packages <- knitr::write_bib(file = 'packages.bib')
+packages
+
+```
+
