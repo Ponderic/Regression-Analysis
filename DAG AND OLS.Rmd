@@ -1,0 +1,510 @@
+---
+title: "Assignment_One"
+author: Author - Eric Opoku -(Collaborators- Jessica Morgan and Chantal Valiquette)
+date: October 7, 2022
+output: pdf_document
+fontsize: 12pt
+geometry: margin=1in
+keep_tex: true
+citation_package: natbib  #or jabref
+#theme: darkly
+#toc: true
+#toc_float: true
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=8, collapse= TRUE, echo = TRUE)
+```
+
+
+```{r header, echo=TRUE, comment=NA}
+
+
+name<- Sys.info()
+name[7]
+```
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+### Load the packages we will need for this file ####
+
+library(AICcmodavg)  #AIC akaike information criterion
+library(kableExtra)
+library(stargazer)
+library(ggdag)      # For plotting DAGs
+
+library(pwr)
+library(countrycode)
+library(stargazer)
+library(pwr)
+library(readxl)
+library(tidyverse) # load the installed package for each new session of R
+library(dagitty)    # For working with DAG logic
+library(broom)
+library(faux) #  simulating data
+library(modelsummary) #  regression tables
+library(causaldata) #  data sets
+library(here) #  directories and projects
+library(plotly) #  directories and projects
+
+set.seed(03262020) # random number generators; same numbers across machines
+```
+
+```{r echo=FALSE, comment=NA}
+mydata<- read_excel("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 1/Dataset 1.xlsx")       
+```
+\newpage
+# Question One
+Directed acyclic graphs (DAGs) are employed to provide guidelines as to which covariates to include in the model, what sensitivity and type of analysis to conduct and the underlying assumptions to consider about the relationships between the variables. \par
+In this instance, the DAG shows that *Life Expectancy at birth for females* is the outcome or dependent variable. The *Health expenditure per capita* is the exposure (or main independent variable). *Gross domestic product per capita*, and *Total fertility rate* are the covariates which are 'controlled for' in the model. \par
+The health literature shows that *Gross domestic product per capita*, and *Total fertility rate* have both direct effect on *Life Expectancy at birth for females* and indirect effect through *Health expenditure per capita*. 
+With the direct effect, countries with *Gross domestic product per capita* may likely have higher standard and quality of life leading to higher *Life Expectancy at birth for females*. Also, higher 
+*Total fertility rate* in a country may deprive females of higher standard and quality of life leading to lower *Life Expectancy at birth* for them. \par
+With the indirect effect, higher *Gross domestic product per capita* and *Total fertility rate* may increase the financial capability and the concern to invest in health capital or increase health expenditure (for females), respectively which is also associated with *Life Expectancy at birth for females*.
+*Health expenditure per capita* may be associated with *Life Expectancy at birth for females* as *Health expenditure* may translated into good health (though not necessarily). It is worth stating that there is potential endogeneity in this association as some unobservable variables may affect both variables. 
+An Instrumental variable or perhaps a 2 stage least squared approach may be appropriate for estimation.\par
+The above arguments are all hypothesis.
+
+```{r message=FALSE, warning=FALSE, echo=TRUE, comment=NA}
+
+
+the_dag <- dagify(  # Create super basic DAG
+  LEBF20052 ~ GDPPCUS2005 + HXPC2005 + TotFertRate2005,
+  HXPC2005 ~ GDPPCUS2005+TotFertRate2005,
+  exposure = "HXPC2005",
+  outcome = "LEBF20052",    
+  labels = c(LEBF20052 = "Life Expectancy at birth-female in 2005",
+             GDPPCUS2005 = "Gross domestic product per capita in US dollars 
+             in 2005",
+             HXPC2005 = "Health expenditure per capita in 2005",
+             TotFertRate2005="Total fertility rate in 2005")
+)
+
+
+set.seed(2545)  #prevents DAG shape from changing
+ggdag_status(the_dag, use_labels= "label",
+             text = FALSE) + theme_dag() 
+# Adding a theme_dag() layer makes it have a white background; no axis labels
+
+```
+
+
+
+\newpage
+# Question Two
+In the regression output, we cannot talk about causation. Based on the DAG, we can only say that when we control for *Gross domestic product per capita* and *Total fertility rate*, there is an association (or not) between *Health expenditure per capita* and  *Life Expectancy at birth for females*. This is because the model is not robust as it may require an instrumental variable for *Health expenditure per capita*. There is also potential endogeneity, and simultaneity bias in the model where some unobserved variables may affect both *Health expenditure per capita* and *Life Expectancy at birth for females*. \par
+The DAG only shows that there could other complex relationships that could be elicited in a model hence one should be careful to interpret a model based on causality. I did not add other variables because they failed to prove economic significance.
+```{r Example Regression, echo=TRUE, comment=NA}
+mydata$HXPC2005<-as.numeric(mydata$HXPC2005)  #convert from character to numeric
+head(mydata$HXPC2005)
+class(mydata$HXPC2005)
+lm_example<-lm(LEBF20052 ~ mydata$HXPC2005+ mydata$GDPPCUS2005 + 
+                 mydata$TotFertRate2005, data = mydata) #Linear regression model
+summary(lm_example)
+#msummary(list("Simple"=lm_example),
+ #        stars=c('*' = .1, '**' = .05, '***' = .01))  #regression table
+
+```
+\newpage
+# Question Three
+YES. The mean and standard deviation for *Life Expectancy at birth for females*, *Gross domestic product per capita* and *Health expenditure per capita* are huge. Perhaps, they should be transformed using a logarithm. 
+```{r echo=TRUE, comment=NA}
+
+class(mydata$LEBF20052)     #summary(mydata$LEBF20052)   #View(mean_LEBF20052)
+mean_LEBF20052<-mean(mydata$LEBF20052, na.rm = TRUE)
+print(mean_LEBF20052)   #69.85832
+sd_LEBF20052<-sd(mydata$LEBF20052, na.rm = TRUE)    #View(sd_LEBF20052)
+print(sd_LEBF20052)   #11.88807
+count(mydata, LEBF20052, na.rm = TRUE)  #175 #sample size of life expectancy
+
+
+
+class(mydata$GDPPCUS2005)   
+mean_GDPPCUS2005<-mean(mydata$GDPPCUS2005, na.rm = TRUE)   
+print(mean_GDPPCUS2005)   #9862.103
+sd_GDPPCUS2005<-sd(mydata$GDPPCUS2005, na.rm = TRUE)   #View(sd_GDPPCUS2005)
+print(sd_GDPPCUS2005)  #16195
+
+#sample size of Gross domestic product per capita 
+count(mydata, GDPPCUS2005, na.rm = TRUE) #175  #sample size of life expectancy
+
+
+
+class(mydata$HXPC2005)   #sample size of Health expenditure per capita
+mydata$HXPC2005<-as.numeric(mydata$HXPC2005)  #convert from character to numeric
+
+mean_HXPC2005<-mean(mydata$HXPC2005, na.rm = TRUE)  #summary(mydata$HXPC2005)   
+print(mean_HXPC2005)  #713.3919
+ 
+sd_HXPC2005<-sd(mydata$HXPC2005, na.rm = TRUE)  #View(sd_HXPC2005)
+print(sd_HXPC2005) #1329.515
+#sample size of Health expenditure per capita 
+count(mydata, HXPC2005, na.rm = TRUE) #174  #sample size of Health expenditure per capita
+
+
+
+summary(mydata$TotFertRate2005)  #Total fertility rate    #View(mydata)
+class(mydata$TotFertRate2005)  #View(mean_TotFertRate2005)
+mean_TotFertRate2005<-mean_TotFertRate2005<-mean(mydata$TotFertRate2005, 
+                                                 na.rm = TRUE)
+print(mean_TotFertRate2005)
+sd_TotFertRate2005<-sd(mydata$TotFertRate2005, na.rm = TRUE)  
+print(sd_TotFertRate2005)
+#View(sd_TotFertRate2005)
+count(mydata, TotFertRate2005, na.rm = TRUE) #165
+
+
+
+```
+
+```{r tables-Variables, echo=TRUE, comment=NA}
+desc_table = data.frame(
+  Measure = c("Life_Expectancy_females", "GDP_per_capita", 
+              "Health_expenditure_per_capita", "Total_fertility_rate"),
+  M_1  = c(mean(mydata$LEBF20052), mean(mydata$GDPPCUS2005), 713.39, 
+           mean(mydata$TotFertRate2005)),
+  SD_1 = c(sd(mydata$LEBF20052), sd(mydata$GDPPCUS2005), 1329.52, 
+           sd(mydata$TotFertRate2005)), #there were NA's for health exp
+  SS  = c(175, 175, 174,165))
+
+#desc_table
+
+
+kable(
+  desc_table,
+  col.names = c("Measure", "*M*", "*SD*", "*Sample Size*"),
+  digits = 2,
+  caption = "Means, Standard Deviations and Sample size of Four Variables"
+  )
+```
+
+
+\newpage
+# Question Four
+Statistical significance is when one uses statistical tools such as p-value to conclude as to whether a relation between some variables makes sense or is significant or acceptable. Economic significance is when one uses economic theory to deem whether same relationship makes sense based on the story it tells. \par 
+Based on the p-value of the model, statistically, *Health expenditure per capita* has positive and significant association with *Life Expectancy at birth for females* (i.e., statistical significance). Thus, a 1000 Dollar increase in *Health expenditure per capita* is significantly associated with 4 years increase in *Life Expectancy at birth for females*.\par 
+From economics point of view, it is meaningful because, all other things being equal, higher health expenditure per capita may lead to good health and consequently, higher  *Life Expectancy at birth for females* (i.e., economic significance). \par
+It is however worth noting here that the model is not robust enough as *Health expenditure per capita* has a very low standard error. A low standard error (i.e., 0.001) means high t-statistics which means low p-value (i.e., o.000) and higher 'probability of significance' for the *Health expenditure per capita* variable meanwhile the R-squared is low (i.e., 0.2).
+
+
+
+\newpage
+
+```{r Regression, echo=TRUE, comment=NA}
+lm_simp<-lm(LEBF20052 ~ HXPC2005, data = mydata) 
+
+
+summary(lm_simp)
+
+msummary(list("Simple"=lm_simp),
+         caption = "Coefficient-Level Estimates for a Model Fitted to Estimate Life 
+    Expectancy at birth for females.",
+    statistic = c("conf.int",
+            "standard error = {std.error}",
+             "p-value = {p.value}"),
+         stars=c('*' = .1, '**' = .05, '***' = .01))  #regression table
+
+
+#lm(LEBF20052 ~ HXPC2005, data = mydata) %>%
+ # tidy() %>%
+  #kable(
+   # caption = "Coefficient-Level Estimates for a Model Fitted to Estimate Life 
+    #Expectancy at birth for females.",
+    #col.names = c("Predictor", "B", "SE", "t", "p"),
+    #digits = c(0, 3, 3, 2, 4))
+
+```
+
+
+\newpage
+# Question Five
+After controlling for *Gross domestic product per capita*, it is now realized that the association between *Health expenditure per capita* and *Life Expectancy at birth for females* was no more significant and the coefficient also reduced from 0.004 (Model A) to -0.001 (Model B). This could mean that *Health expenditure per capita* was only mediating the (significant) association between *Gross domestic product per capita* and *Life Expectancy at birth for females* in *model A*. \par
+Now, *Health expenditure per capita* is associated with a higher standard errors comparative to *model A* (i.e., 0.002 in *model B*). Also, *model B* has a relatively higher R-squared compared to *model A*.
+\par
+In the *model B*, a 1000 Dollar increase in *Gross domestic product per capita* is (significantly) associated with one year increase in *Life Expectancy at birth for females*. In the *model A*, a 1000 Dollar increase in *Health expenditure per capita* was (significantly) associated with 4 years increase in *Life Expectancy at birth for females*.
+
+
+```{r Regression control,  echo=TRUE, message=FALSE, comment=NA, results='asis'}
+lm_simp<-lm(LEBF20052 ~ HXPC2005, data = mydata) 
+
+lm_comp<-lm(LEBF20052 ~ HXPC2005 + GDPPCUS2005, data = mydata) #summary(lm_comp)  
+
+stargazer( 
+  lm_simp, lm_comp,
+  type = "latex",
+  title = "Two Regression Models Predicting Life Expectancy at birth for 
+  females",
+  column.labels = c("Model A", "Model B"),
+  colnames = FALSE,
+  model.numbers = FALSE,
+  dep.var.caption = " ",
+  dep.var.labels = "Life Expectancy at birth for females",
+  covariate.labels = c("Health expenditure per cap","GDP per capita"),  
+  keep.stat = c("rsq", "f"),
+  notes.align = "l",
+  out = "latex"
+  )
+
+```
+\newpage
+# Question Six
+To deal with outliers and skewness, I would recommend a logarithmic transformation of both *Gross domestic product per capita* and *Health expenditure per capita*. Thus, diminishing marginal utility of income suggests that a change in levels of *Gross domestic product (i.e., income) per capita* and *Health expenditure per capita* may impact a rich country lesser relative to a poor country. Hence, the best way to compare their impact on both countries is to use the percentage changes in both variables (i.e., logarithm). \par 
+The R-squared for the previous  *models A and B* (i.e., the levels models) more than doubled after taking the natural log of the variables from 0.203 and 0.252 to 0.475 and 0.493 in *models C and D*, respectively. This depicts that taking the natural log of the variables improved the fitness of the models. \par
+The standard errors for *models C and D* increased (or improved) relative to *models A and B*.\par
+In the *model C*, the association between *log of Health expenditure per capita* and *Life Expectancy at birth for females* is (significantly) higher (i.e., 4.607) as compared to its counterpart in *model A* (i.e., 0.004). \par
+Also, in  *model D*, the association between *log of GDP per capita* and *Life Expectancy at birth for females* is (significantly) higher (i.e., 4.114) relative to its counterpart in *model B* (i.e., 0.001). It is worth noting here that *Health expenditure per capita* was not significant when both  *models B and D* controlled for *GDP per capita*. 
+
+```{r nonlinear, echo=TRUE, message=FALSE, comment=NA, results='asis'}
+# health expenditure #outliers
+ggplot(data=mydata,aes(x=HXPC2005,y=LEBF20052)) + geom_point() +
+theme_minimal() + labs(x="GDP_per_capita",y="Life_Expectancy_females") +
+geom_smooth(method='lm', formula= y~x) #potential nonlinearity
+
+
+
+# health expenditure   #very skewed
+
+h_HXPC2005<-hist(mydata$HXPC2005, breaks=5, prob=T, 
+                 main="Frequency distribution of Health expenditure per capita",
+         ylab="Frequency of Health expenditure per capita",
+         xlab=" Health expenditure per capita",
+                    col="grey")
+
+#log it
+
+
+
+#GDP outliers
+ggplot(data=mydata,aes(x=GDPPCUS2005,y=LEBF20052)) + geom_point() +
+theme_minimal() + labs(x="GDP_per_capita",
+y="Life_Expectancy_females") +
+geom_smooth(method='lm', formula= y~x)
+
+#GDP SKEWNESS
+h_GDPPCUS2005<-hist(mydata$GDPPCUS2005, breaks=5, prob=T, 
+                 main="Frequency distribution of Health expenditure per capita",
+         ylab="Frequency of GDP per capita",
+         xlab="GDP per capita",
+                    col="grey")
+
+
+#logarithm
+#repeating previous regression with log of both GDP and HXPC
+lm_simp_log<-lm(LEBF20052 ~ log(HXPC2005), data = mydata) 
+
+lm_comp_log<-lm(LEBF20052 ~ log(HXPC2005) + log(GDPPCUS2005), data = mydata) #summary(lm_comp)  
+
+
+stargazer(
+  lm_simp_log, lm_comp_log,
+  type = "latex",
+  title = "Two Regression Models Predicting Life Expectancy at birth for 
+  females (transformed)",
+  column.labels = c("Model C", "Model D"),
+  colnames = FALSE,
+  model.numbers = FALSE,
+  dep.var.caption = " ",
+  dep.var.labels = "Life Expectancy at birth for females (transformed)",
+  covariate.labels = c("log Health expenditure per cap", "log GDP per cap"),  
+  keep.stat = c("rsq", "f"),
+  notes.align = "l",
+  out = "latex"
+  )
+
+
+```
+
+\newpage
+# Question Seven
+After controlling for the geography dummy, the R-squared increased from 0.475 and 0.493 in the previous  *models C and D* to 0.63 and 0.641 in the current  *models E and F*, respectively. Thus, the model further improved. \par
+The results depict that Africa is significantly associated with lesser *Life Expectancy at birth for females* relative to its Asian counterpart (i.e., reference variable). I am careful to explain the coefficients here since  they are not marginal effects. However, for the sake of the assignment, I would say that being the African continent is significantly associated with 12 and 11.6 years lesser *Life Expectancy at birth for females* relative to their Asian counterparts for *models E and F*, respectively. The other variables were not significant and hence, i will not report them. \par
+In addition, the association between *log of GDP per capita* and  *Life Expectancy at birth for females* was positive and significant (i.e., Not marginal effects). For the sake of the assignment, I would say that a one percentage change in *log of GDP per capita* leads to a significantly 0.03 (i.e., 3.320/100) increase in *Life Expectancy at birth for females*. \par 
+Moreover, the significant impact or coefficients of *log of Health capital expenditure per capita* and the *log of GDP per capita* from the previous *models C and D* decreased significantly in the current *models E and F*. For instance, with regards to *log of Health capital expenditure per capita*, its association with *Life Expectancy at birth for females* decreased from 4.607 in *model C* to 3.195 in *model E* and that of  *log of GDP per capita* decreased from 4.114 in *model D* to 3.32 in *model F*. This depicts that the coefficients in the previous  *models C and D* (without controlling for geography dummy) were overstated.                   
+
+
+
+
+```{r geography, echo=TRUE, message=FALSE, comment=NA, results='asis'}
+mydata$continent <- countrycode(sourcevar = mydata$Country,
+                            origin = "country.name",
+                            destination = "continent")
+
+mydata$africa<-ifelse(mydata$continent=="Africa",yes= "1",no= "0")
+count(mydata, africa, na.rm = TRUE) #52
+
+mydata$asia<-ifelse(mydata$continent=="Asia",yes= "1",no= "0")
+count(mydata, asia, na.rm = TRUE) #44  
+#i choose asia as dummy because they have second largest obs.
+
+mydata$europe<-ifelse(mydata$continent=="Europe",yes= "1",no= "0")
+count(mydata, europe, na.rm = TRUE) #40
+
+mydata$americas<-ifelse(mydata$continent=="Americas",yes= "1",no= "0")
+count(mydata, americas, na.rm = TRUE) #30
+
+mydata$oceania<-ifelse(mydata$continent=="Oceania",yes= "1",no= "0")
+count(mydata, oceania, na.rm = TRUE) #9
+
+
+#repeating Ques six regression
+#dummy continent
+#repeating previous regression with dummy continent
+lm_simp_log_cont<-lm(LEBF20052 ~ log(HXPC2005)+ africa + oceania + europe 
+                     + americas, data = mydata) 
+
+lm_comp_log_cont<-lm(LEBF20052 ~ log(HXPC2005)+ africa + oceania + europe 
+                     + americas 
+                + log(GDPPCUS2005), data = mydata) #summary(lm_comp)  
+
+
+
+stargazer(  
+ lm_simp_log_cont, lm_comp_log_cont,
+  type = "latex",
+  title = "Two Regression Models Predicting Life Expectancy at birth for 
+  females (geography)",
+  column.labels = c("Model E", "Model F"),
+  colnames = FALSE,
+  model.numbers = FALSE,
+  dep.var.caption = " ",
+  dep.var.labels = "Life Expectancy at birth for females (geography)",
+  covariate.labels = c("log Health expenditure per cap", "Africa",
+                       "Oceania", "Europe", "Americas",
+                       "log GDP per cap"),  
+  keep.stat = c("rsq", "f"),
+  notes.align = "l",
+  out = "latex"
+  )
+
+
+
+```
+\newpage
+# Question Eight
+With this interaction, I am measuring the unit change in *Life Expectancy at birth for females* when the *log of Health expenditure per capita* changes by let's say 10 percent for Africa relative to their Asian counterparts. \par 
+It is meaningful to measure the above because 'returns' to *Health expenditure per capita* might be different for different continents. For instance, given a (relatively) lower investment in *Health expenditure per capita* in Africa, any change in *Health expenditure per capita* may more likely lead to higher returns relative to similar investment abroad or in Asia. \par 
+This analysis is based on 'the law of diminishing returns'. Thus, all other things being equal, as investment in health or health expenditure increases, returns to the investment increases to a point and cannot continue to increase anymore or stagnates or increases at a decreasing rate. In other words, continents such as Americas or Asia might have invested in health capital or have higher health expenditure relative to *Africa* especially due to drugs and technological costs and innovations. Hence, their 'returns to health capital investment/expenditure may be minimal relative to Africa. \par 
+Evidence from *models G and H* confirms the above hypothesis, though it is insignificant. Thus, a one percentage increase in the *log of Health expenditure per capita* increases *Life Expectancy at birth for females* by 0.0058 and 0.0032 in *models G and H*, respectively for Africa relative to their Asian counterparts. 
+ 
+*
+```{r interaction term, echo=TRUE, message=FALSE, comment=NA, results='asis'}
+
+
+#repeating Ques seven regression with interac
+#repeating previous regression with interaction term
+
+lm_simp_log_cont_int<-lm(LEBF20052 ~ log(HXPC2005) + africa + oceania + europe 
+                    + americas + log(HXPC2005):africa, data = mydata) 
+
+print(lm_simp_log_cont_int)
+
+
+
+
+lm_comp_log_cont_int<-lm(LEBF20052 ~ log(HXPC2005) + africa + oceania + europe 
+                     + americas 
+                + log(GDPPCUS2005)+ log(HXPC2005):africa, data = mydata) #summary(lm_comp)  
+
+print(lm_comp_log_cont_int)
+
+
+
+stargazer(
+  lm_simp_log_cont_int, lm_comp_log_cont_int,
+  type = "latex",
+  title = "Three Regression Models Predicting Life Expectancy at birth for 
+  females (Africa dummy)",
+  column.labels = c("Model G", "Model H"),
+  colnames = FALSE,
+  model.numbers = FALSE,
+  dep.var.caption = " ",
+  dep.var.labels = "Life Expectancy at birth for females (Africa dummy)",
+  covariate.labels = c("log of Health expenditure per cap", "Africa",
+                       "Oceania", "Europe", "Americas",
+                       "log GDP per cap sq", "log of Health Expenditure-Africa"),  
+  keep.stat = c("rsq", "f"),
+  notes.align = "l",
+  out = "latex"
+  )
+
+```
+
+\newpage
+# Question Nine
+Establishing causal relationship is difficult in the model because there are other covariates that may not have been controlled for (e.g., omitted variable bias). For instance, the Akaike Information criterion (AIC) showed that a model gets better the extent we make it better. Thus, when it comes to modelling, we can always do better. The model listed first always has the lowest AIC value and is thus the best fitting model as far these particular models are concerned. The best model (Model F) was when we controlled for relevant variables such as the continents and the *log of GDP per capita*.\par 
+In addition, we cannot be certain that our outcome and exposure variables do not simultaneously impact each other (i.e., simultaneity bias). One can argue that same way countries that have higher *log of Health expenditure per capita* may have longer *life expectancy for females*, countries who have longer *life expectancy for females* are more likely to have higher *log of Health expenditure per capita*\par
+Also, it could be that our model is impacted by other variables which are ignored from the model (i.e., potential endogeneity). For instance, there may be other unobserved factors that affect both the *life expectancy for females* and *log of Health expenditure per capita* that are not 'controlled for' in the model. Thus, a country like Americas may inherently cherish longevity relative to other continents and even though this cannot be measured due to lack of data availability, it may affect both the *life expectancy for females* and *log of Health expenditure per capita*. In addition, the figure depicts that *Health expenditure per capita* is unadjusted. Thus, the model may require an instrumental variable. This is the basic form of showing that some variables are not added in the model. \par 
+Moreover, there independent variables of a model could be associated with each other (e.g., multicollinearity). \par
+By and large, the more we make the model robust, the more it becomes representative of the data. So we cannot conclude causality same way we can never know whether our model is the best it can ever be. This is the reason why economists do a lot of post-estimation testing.
+
+
+```{r Identification problem, echo=TRUE, comment=NA}
+#stargazer(lm_comp, type = 'text')
+
+#lm_full <- lm(LEBF20052 ~ HXPC2005 + GDPPCUS2005 + TotFertRate2005, data=mydata)  
+
+set.seed(33)  #prevents DAG shape from changing 
+ggdag_adjustment_set(the_dag, shadow = TRUE, text = FALSE, 
+                     use_labels="label") + theme_dag() 
+
+#Let's do some little proof with the Akaike Information criterion (AIC)
+
+ 
+ 
+models<-list(lm_simp, lm_simp_log, lm_simp_log_cont, lm_simp_log_cont_int, lm_comp, lm_comp_log, lm_comp_log_cont, lm_comp_log_cont_int)
+
+mod.names<- c('lm_simp', 'lm_simp_log', 'lm_simp_log_cont', 'lm_simp_log_cont_int', 'lm_comp', 'lm_comp_log', 'lm_comp_log_cont', 'lm_comp_log_cont_int')
+
+aictab(cand.set = models, modnames = mod.names) 
+
+
+
+#we can always do better when it comes to modelling
+#lm_full_sq_conti is the best model
+```
+
+\newpage
+# Question Ten
+Based on the point made in question 9, it will always be advisable to run models with robust standard errors or take care of clustering. Hence, I will re-run the model with robust standard errors. \par 
+It is worth noting that if standard errors are not robust, then variables which were not supposed to be significant will end up being significant. For instance, in our model, we realize that the *classical* model has a relatively lower standard errors which means t-statistics are high, p-values are low, and the 'probability of significance' will be high for the variables relative to those in the *robust* standard errors model. Thus, some variables may be unnecessarily significant in the *classical* model only because the standard errors are not robust (or small). The standard errors for *log of Health expenditure per capita* is 1.541 and 2.188 for the *classical* and *robust* model, respectively. The standard errors for *log of GDP per capita* is 1.657 and 2.392 for the *classical* and *robust* model, respectively.
+```{r plot-variance, echo=TRUE, comment=NA}
+#Lets check if our assumption of homoskedasticity is satisfied. 
+
+mydata <- mydata %>% mutate(life_exp=exp(LEBF20052))
+ggplot(mydata,aes(x=HXPC2005,y=life_exp)) + geom_point() + theme_minimal()
+
+
+#repeating Ques eight regression
+lm_comp_log<-lm(LEBF20052 ~ log(HXPC2005) + log(GDPPCUS2005), data = mydata) #summary(lm_comp) 
+
+
+#We may not be able to use kable here because of the naive and robust
+
+msummary(list("naive"=lm_comp_log),
+         stars=c('*' = .1, '**' = .05, '***' = .01))
+
+# Same model with robust standard errors
+msummary(list("naive"=lm_comp_log,
+              "robust"=lm_comp_log),
+         vcov=c("classical","robust"),
+         stars=c('*' = .1, '**' = .05, '***' = .01))
+
+
+
+
+
+
+
+
+```
+
+
+\newpage
+
+```{r References,  echo=TRUE, message=FALSE, comment=NA, results='asis'}
+packages <- knitr::write_bib(file = 'packages.bib')
+packages
+
+```
