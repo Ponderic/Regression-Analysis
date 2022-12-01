@@ -106,8 +106,9 @@ mydata<-mydata%>%mutate(date=as.Date(date, format="YYYY-MM-DD"))
 
 
 #QUESTION ONE A:
-(i)shape
-(ii)concerned about any control group? Yes, Soup and sandwich seems to have been affected by the pandemic but cereal is horizontal and seems like a good control variable
+(i) Based on the line graph, it could be hypothesized that, after the pandemic, the popularity of the search term "sourdough" increased relative to the controls such as cereal which remained constant over time. Nonetheless, the potential effect of the pandemic on the popularity of the search term "sourdough" seems to be temporal as it declines over time.
+
+(ii) Based on the line graph, soup and sandwich do not seem tto be good controls as their search on google or hits were not constant over time.
 
 ```{r Line graph, message=FALSE, warning=FALSE, comment=NA}
 
@@ -128,9 +129,11 @@ ggplot(mydata,aes(x=date,y=hits,group=keyword, col=keyword)) + geom_line() +
 
 
 ## QUESTION ONE B:
-
+Prior trends differ significantly between the treated and control groups. I will drop the soup and sandwich as they are not good controls based on the graph.
 
 ```{r Prior trends, message=FALSE, warning=FALSE, comment=NA}
+
+
 table(mydata$keyword)
 
 #View(mydata)
@@ -184,10 +187,12 @@ mydata <- mydata %>% mutate(relative_month = round((as.numeric(date) - 2020.211)
 ```
 
 #QUESTION ONE D
+There is a positive an significant effect of the pandemic on the popularity of the search term "sourdough".
 
 ```{r TWFE, message=FALSE, warning=FALSE, comment=NA}
 
 #difference-in-difference estimate of the effect of lockdown on sourdough popularity.
+#mydata <- mydata %>% mutate(logy = log(hits))
 
 
 dte <- feols(logy ~ i(relative_month, the_keyword, ref = -1) | 
@@ -197,6 +202,10 @@ dte <- feols(logy ~ i(relative_month, the_keyword, ref = -1) |
 iplot(dte,ref.line=-0.2, 
          ref.line.par=list(col="red",lty=1,lwd=2))
 
+
+msummary(list(dte),
+          vcov=c(~keyword),
+         stars=c('*' = .1, '**' = .05, '***' = .01)) # Interpret each coefficient here
 
 ```
 
@@ -208,7 +217,8 @@ iplot(dte,ref.line=-0.2,
 
 #QUESTION TWO
 
-#A
+#A 
+The rate of living organ donations for Louisiana and other states is stable over time.
 
 ```{r Synth control, message=FALSE, warning=FALSE, comment=NA}
 
@@ -228,6 +238,24 @@ summary(mydata2$AllDonors)
 
 summary(mydata2$WaitinglistAdditions)
 
+
+desc_table = data.frame(
+  Measure = c("Donations_(total)", "Donations_(Living)", 
+              "Waiting_list_Additions",
+  Mean  = c(mean(mydata2$AllDonors), mean(mydata2$LivingDonors), 
+           mean(mydata2$WaitinglistAdditions)),
+  SD = c(sd(mydata2$AllDonors), sd(mydata2$LivingDonors), 
+           sd(mydata2$WaitinglistAdditions))))
+
+#desc_table
+library(kableExtra)
+
+#   kable(
+#  desc_table,
+#  col.names = c("Measure", "*Mean*", "*SD*"),
+#  digits = 2,
+#  caption = "Means and Standard Deviations of three Variables"
+#  )
 
 ```
 
@@ -265,10 +293,10 @@ linegraph2+
 ```
 
 #B
-
+A typical difference-in-difference will not suffice here because, based on the line graph, the rates of living organ donations seems to be mimickking each other for the various states.There is no clear cut effect of a policy. it could be that most states have the policy and hence they may not serve as good controls. Hence, it will be advisable to create a "synthetic control" variable to measure the effect of the policy.
 
 #C
-
+Based on poking around the data, i believe that Alaska, Idaho, Montana, Vermont, and Wyoming should be dropped as the rate of living organ donations were zero for each of them. Our focus is to examine whether a change from tax deductions to tax credit affects living organs donations hence such states where there are no donations may not be helpful in our analysis.
 
 ```{r drop some states}
 
@@ -285,7 +313,7 @@ mydata2 <- mydata2 %>% filter(State  %!in% c("Alaska", "Idaho", "Montana",
 
 
 #D
-
+The synthetic control weights for lagged GDP and Delaware were relatively higher.
 
 ```{r Synthetic cont, message=FALSE, warning=FALSE, comment=NA}
 
@@ -334,6 +362,8 @@ donation_out %>%
 
 
 #E
+The synthetic control construction was not successful because, graphically, the "before the policy" trend were not close to each other.
+The reason could be that the real or observed Louisiana trend of living organs donations may be affected by time varying factors which do not affect the synthetic trend.
 
 ```{r Balance table,echo=TRUE, message=FALSE, comment=NA}
 
@@ -361,11 +391,11 @@ donation_out %>% plot_trends() +
 
 #F Checking effectiveness
 ### Interpreting the Synthetic Control
+It can be realised that the policy only had a temporal positive effect on the rate of living organs donations but it declines over time.
 
-So what's the effect? To find out, let's compare Louisiana and Synthetic Louisiana over time: 
 
 ```{r echo=TRUE, message=FALSE, comment=NA}
-
+#So what's the effect? To find out, let's compare Louisiana and Synthetic Louisiana over time: 
 
 donation_out %>% plot_trends() +
   scale_x_continuous(breaks = c(-15,-10,-5,0,5)) +
@@ -392,7 +422,7 @@ donation_out %>% plot_differences() +
 
 
 #G
-
+The change of date of implementation do not have any impact on the effectiveness of the policy. It is still not increasing the rate of living organ donations.
 
 ```{r Placebo tests, echo=TRUE, message=FALSE, comment=NA}
 #i:
@@ -518,7 +548,10 @@ placebo_out %>% plot_differences()  +
   )
 
 
+#placebo_out %>% grab_signficance() %>% filter(unit_name=="Louisiana")
+#placebo_out %>% grab_unit_weights() %>% arrange(desc(weight))
 
+#placebo_out %>% plot_mspe_ratio() 
 
 
 ```
@@ -526,7 +559,7 @@ placebo_out %>% plot_differences()  +
 
 #H
 
-
+Moving from tax deductions to tax credits may have a long-term detrimental effect on the rate of living organ donations.
 
 
 ```{r References,  echo=TRUE, message=FALSE, comment=NA, results='asis'}
