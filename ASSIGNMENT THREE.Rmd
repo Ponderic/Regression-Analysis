@@ -1,0 +1,536 @@
+---
+title: "Assignment_Three Q2"
+author: "Author - Eric Opoku"
+date: "December 8, 2022"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+fontsize: 12pt
+geometry: margin=1in
+keep_tex: yes
+---
+
+
+```{r setup, include=FALSE, comment=NA}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.width = 8,
+	message = FALSE,
+	warning = FALSE,
+	collapse = TRUE
+)
+```
+
+
+```{r header, echo=TRUE, message=FALSE, warning=FALSE, comment=NA}
+
+
+name<- Sys.info()
+name[7]
+```
+
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+
+library(rlang)
+library(dplyr)
+library(kableExtra)
+library(ggdag)      # For plotting DAGs
+library(dagitty)    # For working with DAG logic
+library(modelsummary) # For making regression tables
+library(AER) # this package has lots of applied metrics packages
+library(foreign) 
+# Helpful for reading in data from Stata or other code languages 
+library(lubridate) # For figures
+library(stargazer) # For tables
+library(data.table)  #data manipulation and wrangling
+library(lme4)
+library(psych)
+library(readxl) # Read in data
+library(expss) #value labelling from spss style
+library(readstata13)
+library(marginaleffects) # To calculate marginal effects
+library(knitr) # Alternative table package
+library(ggplot2)
+
+
+
+
+
+######
+### 0. Load the packages we will need for this file ####
+library(tidyverse) # load the installed package for each new session of R
+library(broom)
+library(causaldata) # Useful toy data sets
+library(here) # Helpful in working with directories and projects
+library(zoo) # Helpful packages for organizing dates
+library(tidysynth) # For synthetic controls
+library(gsynth) # For synthetic controls
+library(gghighlight) # For figures 
+library(binsreg) # For binscatters
+library(nprobust) # Local linear regression
+
+library(fixest)
+
+set.seed(032620) # random number generators; same numbers across machines
+```
+
+
+#QUESTION ONE
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+mydata<- read_excel("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 3/a3_p1_sourdough_trends.xlsx") 
+
+#View(mydata)
+
+
+#regdata$the_date<-mydata$date  # I will use this data later
+
+
+  
+table(mydata$date)
+table(mydata$hits)
+table(mydata$keyword)
+table(mydata$time)
+table(mydata$gprop)
+table(mydata$category)
+table(mydata$geo)
+
+mydata<-mydata%>%mutate(date=as.Date(date, format="YYYY-MM-DD"))
+#View(mydata)
+
+```
+
+
+#QUESTION ONE A:
+(i)shape
+(ii)concerned about any control group? Yes, Soup and sandwich seems to have been affected by the pandemic but cereal is horizontal and seems like a good control variable
+
+```{r Line graph, message=FALSE, warning=FALSE, comment=NA}
+
+
+# Group to month level
+#mydata <- mydata %>% group_by(date, keyword) %>% summarize(hits = sum(hits,na.rm=T))
+
+
+#Show hits over time for each Keyword
+ggplot(mydata,aes(x=date,y=hits,group=keyword, col=keyword)) + geom_line() + 
+  theme_classic() + labs(x="Time",y="Monthly Hits")+ 
+  geom_vline(xintercept = as.Date('2020-03-15'),color='black')
+
+
+
+
+```
+
+
+## QUESTION ONE B:
+
+
+```{r Prior trends, message=FALSE, warning=FALSE, comment=NA}
+table(mydata$keyword)
+
+#View(mydata)
+# Definition of key variables
+mydata <- mydata %>% mutate(treated = ifelse(keyword == "sourdough", 1, 0), 
+                              interaction = ifelse(keyword == "sourdough",date,0))
+
+# Statistical tests: are the two groups' trends different?
+pretrend_t <- lm(hits ~ date + interaction, data=mydata)
+
+#using better control variable and dropping others
+# Regression data -- just cereal and sourdough 
+mydata <- mydata %>% filter(keyword %in% c("sourdough","cereal"))
+
+pretrend_test <- lm(hits ~ date + interaction, data=mydata)
+msummary(list(pretrend_t,pretrend_test),
+         vcov=c(rep("robust",2)),
+         stars=c('*' = .1, '**' = .05, '***' = .01)) # Interpret each coefficient here
+
+```
+## QUESTION ONE C:
+
+
+```{r Relative month, message=FALSE, warning=FALSE, comment=NA}
+# Definition of key variables
+
+mydata$date <- as.yearmon(mydata$date)
+
+
+mydata <- mydata %>% mutate(the_keyword = ifelse(keyword == "sourdough",1,0))
+mydata <- mydata %>% mutate(After = ifelse(date >= "Mar 2020",1,0))
+#mydata <- mydata %>% mutate(inter = keyword * post)
+                            
+table(mydata$hits)
+table(mydata$After)
+table(mydata$the_keyword)
+
+
+# transform the data #Run pre trends again?
+mydata <- mydata %>% mutate(logy = log(hits))
+
+
+# First, construct relative time variable
+mydata <- mydata %>% mutate(relative_month = round((as.numeric(date) - 2020.211)*12)) 
+
+#View(mydata)
+
+
+
+
+```
+
+#QUESTION ONE D
+
+```{r TWFE, message=FALSE, warning=FALSE, comment=NA}
+
+#difference-in-difference estimate of the effect of lockdown on sourdough popularity.
+
+
+dte <- feols(logy ~ i(relative_month, the_keyword, ref = -1) | 
+                date + keyword, data = mydata)
+
+# And use coefplot() for a graph of effects
+iplot(dte,ref.line=-0.2, 
+         ref.line.par=list(col="red",lty=1,lwd=2))
+
+
+```
+
+
+
+
+ 
+
+
+#QUESTION TWO
+
+#A
+
+```{r Synth control, message=FALSE, warning=FALSE, comment=NA}
+
+mydata2<- read_excel("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/ASSIGNMENTS/ASSIGNMENT 3/a3_p2_organ_donations.xlsx") 
+
+#View(mydata2)
+
+
+```
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+
+summary(mydata2$LivingDonors)
+
+summary(mydata2$AllDonors)
+
+
+summary(mydata2$WaitinglistAdditions)
+
+
+```
+
+```{r rates of living organ donations, message=FALSE, warning=FALSE, comment=NA}
+#population-adjusted
+mydata2$LivingDonors<-mydata2$LivingDonors/mydata2$Population*1000000
+mydata2$AllDonors<-mydata2$AllDonors/mydata2$Population*1000000
+mydata2$WaitinglistAdditions<-mydata2$WaitinglistAdditions/mydata2$Population*1000000
+
+mydata2$GDP_percapita<-mydata2$GDP/mydata2$Population*1000000
+
+mydata2$GDP_percapita_mean<-mean(mydata2$GDP_percapita)
+
+#install.packages("table1")
+library(table1)
+table1(~GDP_percapita+LivingDonors+AllDonors+WaitinglistAdditions, data=mydata2)   #or VTABLE
+#rate of living organ donations
+#table(mydata2$rate_LivingDonors)
+
+#The mean for all variables
+
+# Some descriptive figures
+View(mydata2)
+
+linegraph2<-ggplot(mydata2, aes(x = Year, 
+                y = LivingDonors, 
+                group = State)) +
+  geom_line() + 
+  gghighlight(State=="Louisiana",
+              label_params = list(fill = NA, alpha=1)) 
+linegraph2+
+  geom_line(aes(xintercept=2015),
+            linetype=4, colour="black")+
+  theme_classic()
+```
+
+#B
+
+
+#C
+
+
+```{r drop some states}
+
+#drop those with zeros for living donors
+
+`%!in%` <- Negate(`%in%`)
+mydata2 <- mydata2 %>% filter(State  %!in% c("Alaska", "Idaho", "Montana",
+                                             "Vermont", "Wyoming"))
+
+```
+
+
+
+
+
+#D
+
+
+```{r Synthetic cont, message=FALSE, warning=FALSE, comment=NA}
+
+
+
+mydata2$centered_year<-mydata2$Year-2015
+# Construct Synthetic Controls
+donation_out <-
+  mydata2  %>%
+  # initial the synthetic control object
+  synthetic_control(outcome = LivingDonors, # outcome
+                    unit = State, # unit index in the panel data
+                    time = Year, # time index in the panel data
+                    i_unit = "Louisiana", # unit where the intervention occurred
+                    i_time = 2015, # time period when the intervention occurred
+                    generate_placebos=T # generate placebo synthetic controls (for inference)
+  ) %>%
+    generate_predictor(time_window = 2000:2014,
+    lagged_state_population=mean(Population, na.rm=T),
+    lagged_state_GDP=mean(GDP, na.rm=T),
+    lagged_totaldonations = mean(AllDonors, na.rm=T)) %>%
+    # Generate the fitted weights for the synthetic control
+  generate_weights(optimization_window = 2000:2014, # time to use in the optimization task
+                   margin_ipop = .02,sigf_ipop = 7,bound_ipop = 6 # optimizer options
+  ) %>%
+  # Generate the synthetic control
+  generate_control()
+
+  
+#relative weights
+
+# Which states are we using, and what weights are they given? 
+donation_out %>%
+  grab_unit_weights() %>%
+  mutate(weights = round(weight, digits = 4)) %>%
+  select(unit, weights) %>%
+  filter(weights>0.0001) %>%
+  as.data.frame() %>%
+  stargazer(summary = FALSE, rownames = FALSE,type="text")
+
+# What about the independent variables?
+donation_out %>% 
+  plot_weights() + 
+  labs(title="Synthetic Control Weights") 
+```
+
+
+#E
+
+```{r Balance table,echo=TRUE, message=FALSE, comment=NA}
+
+# Balance Table
+donation_out %>%
+  grab_balance_table() %>%
+  mutate(difference = Louisiana - synthetic_Louisiana) %>%
+  select(variable, Louisiana, synthetic_Louisiana, difference, donor_sample) %>%
+  as.data.frame() %>%
+  stargazer(summary = FALSE, rownames = FALSE, 
+            caption = "Balance Table", 
+            label = "balancetable",type="text") # 
+
+
+donation_out %>% plot_trends() +
+  scale_x_continuous(breaks = c(-15,-10,-5,0,5)) +
+  labs(
+    title = "Louisiana and Synthetic Louisiana",
+    caption = "Timing of The donations",
+    x="Years Relative to donations",
+    y="rate of donations"
+  ) 
+
+```
+
+#F Checking effectiveness
+### Interpreting the Synthetic Control
+
+So what's the effect? To find out, let's compare Louisiana and Synthetic Louisiana over time: 
+
+```{r echo=TRUE, message=FALSE, comment=NA}
+
+
+donation_out %>% plot_trends() +
+  scale_x_continuous(breaks = c(-15,-10,-5,0,5)) +
+  labs(
+    title = "Louisiana and Synthetic Louisiana",
+    caption = "Timing of The donations",
+    x="Years Relative to donations",
+    y="rate of donations"
+  )
+
+#So what's the effect? To find out, let's compare Louisiana and Synthetic Louisiana over time: 
+# Plot Model Differences
+donation_out %>% plot_differences() +
+  scale_x_continuous(breaks = c(-15,-10,-5,0,5)) +
+  labs(
+   title = "Louisiana and Synthetic Louisiana",
+    caption = "Timing of The donations",
+    x="Years Relative to donations",
+    y="rate of donations"
+  ) 
+
+
+```
+
+
+#G
+
+
+```{r Placebo tests, echo=TRUE, message=FALSE, comment=NA}
+#i:
+# Plot placebos of different states' assignments
+### Inference
+#How do we get a sense of whether the effect was significant? To do this, let's plot the placebo differences between each state and it's "synthetic state" in the world where the vaccine lottery never took place (hint: the lottery *never* took place in *any* of these states).
+
+
+donation_out %>% plot_placebos() +
+  scale_x_continuous(breaks = c(-15,-10,-5,0,5)) +
+  labs(
+    title = "Difference between State and Synthetic State: All States",
+    caption = "Timing of The Donation",
+    x="Years Relative to time of donations",
+    y="Difference in rate donated"
+  )
+
+
+#ii
+
+# This test shifts the pre-treatment window back five years
+
+
+placebo_out <-
+  mydata2 %>% 
+  filter(Year <= 2018) %>% 
+  # initial the synthetic control object
+  synthetic_control(outcome = LivingDonors, # outcome
+                    unit = State, # unit index in the panel data
+                    time = Year, # time index in the panel data
+                    i_unit = "Louisiana", # unit where the intervention occurred
+                    i_time = 2018, # time period when the intervention occurred
+                    generate_placebos=T # generate placebo synthetic controls (for inference)
+  ) %>%
+    generate_predictor(time_window = 2000:2017,
+    lagged_state_population2=mean(Population, na.rm=T),
+    lagged_state_GDP2=mean(GDP, na.rm=T),
+    lagged_totaldonations2 = mean(AllDonors, na.rm=T)) %>%
+    # Generate the fitted weights for the synthetic control
+  generate_weights(optimization_window = 2000:2017, # time to use in the optimization task
+                   margin_ipop = .02,sigf_ipop = 7,bound_ipop = 6 # optimizer options
+  ) %>%
+  # Generate the synthetic control
+  generate_control()
+  
+  ###########################
+
+#relative weights
+
+# Which states are we using, and what weights are they given? 
+placebo_out %>%
+  grab_unit_weights() %>%
+  mutate(weights = round(weight, digits = 4)) %>%
+  select(unit, weights) %>%
+  filter(weights>0.0001) %>%
+  as.data.frame() %>%
+  stargazer(summary = FALSE, rownames = FALSE,type="text")
+
+# What about the independent variables?
+placebo_out %>% 
+  plot_weights() + 
+  labs(title="Synthetic Control Weights") 
+
+
+
+
+# Balance Table
+placebo_out %>%
+  grab_balance_table() %>%
+  mutate(difference = Louisiana - synthetic_Louisiana) %>%
+  select(variable, Louisiana, synthetic_Louisiana, difference, donor_sample) %>%
+  as.data.frame() %>%
+  stargazer(summary = FALSE, rownames = FALSE, 
+            caption = "Balance Table", 
+            label = "balancetable",type="text") # 
+
+
+placebo_out %>% plot_trends() +
+  scale_x_continuous(breaks = c(-15,-10,-5,0,5)) +
+  labs(
+    title = "Louisiana and Synthetic Louisiana",
+    caption = "Timing of The donations",
+    x="Years Relative to donations",
+    y="rate of donations"
+  ) 
+
+
+#So what's the effect? To find out, let's compare Louisiana and Synthetic Louisiana over time: 
+# Plot Model Differences
+placebo_out %>% plot_differences() +
+  scale_x_continuous(breaks = c(-15,-10,-5,0,5)) +
+  labs(
+   title = "Louisiana and Synthetic Louisiana",
+    caption = "Timing of The donations",
+    x="Years Relative to donations",
+    y="rate of donations"
+  ) 
+
+#####################
+
+
+
+
+  
+  
+  #####################
+
+placebo_out %>% plot_trends()  + 
+  labs(
+    title = "Placebo Analysis: Louisiana and Synthetic Louisiana",
+  caption = "Timing of The donations",
+    x="Years Relative to donations",
+    y="rate of donations"
+  )
+
+
+placebo_out %>% plot_differences()  + 
+  labs(
+    title = "Placebo Analysis:  Difference between Ohio and Synthetic Ohio",
+   caption = "Timing of The donations",
+    x="Years Relative to donations",
+    y="rate of donations"
+  )
+
+
+
+
+
+```
+
+
+#H
+
+
+
+
+```{r References,  echo=TRUE, message=FALSE, comment=NA, results='asis'}
+packages <- knitr::write_bib(file = 'packages.bib')
+packages
+
+```
