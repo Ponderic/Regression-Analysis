@@ -1,7 +1,7 @@
 ---
 title: "Assignment_Three Q2"
 author: "Author - Eric Opoku"
-date: "December 8, 2022"
+date: "December 2, 2022"
 output:
   pdf_document: default
   html_document:
@@ -78,7 +78,6 @@ set.seed(032620) # random number generators; same numbers across machines
 ```
 
 
-#QUESTION ONE
 
 
 ```{r message=FALSE, warning=FALSE, comment=NA}
@@ -91,8 +90,8 @@ mydata<- read_excel("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/S
 
 
   
-table(mydata$date)
-table(mydata$hits)
+#table(mydata$date)
+#table(mydata$hits)
 table(mydata$keyword)
 table(mydata$time)
 table(mydata$gprop)
@@ -104,11 +103,12 @@ mydata<-mydata%>%mutate(date=as.Date(date, format="YYYY-MM-DD"))
 
 ```
 
+\newpage
+#QUESTION ONE A: 
+\par
+(i) Based on the line graph, it could be hypothesized that, after the pandemic, the popularity of the search term "sourdough" increased relative to the controls such as cereal which remained constant over time. Nonetheless, the potential effect of the pandemic on the popularity of the search term "sourdough" seems to be temporal as it declines over time. \par
 
-#QUESTION ONE A:
-(i) Based on the line graph, it could be hypothesized that, after the pandemic, the popularity of the search term "sourdough" increased relative to the controls such as cereal which remained constant over time. Nonetheless, the potential effect of the pandemic on the popularity of the search term "sourdough" seems to be temporal as it declines over time.
-
-(ii) Based on the line graph, soup and sandwich do not seem tto be good controls as their search on google or hits were not constant over time.
+(ii) Based on the line graph, soup and sandwich do not seem to be good controls as their search on google or hits were not constant over time.
 
 ```{r Line graph, message=FALSE, warning=FALSE, comment=NA}
 
@@ -127,9 +127,10 @@ ggplot(mydata,aes(x=date,y=hits,group=keyword, col=keyword)) + geom_line() +
 
 ```
 
-
+\newpage
 ## QUESTION ONE B:
-Prior trends differ significantly between the treated and control groups. I will drop the soup and sandwich as they are not good controls based on the graph.
+\par 
+Prior trends differ significantly between the treated and control groups. I will drop the soup and sandwich (in Model 2) as they are not good controls based on the graph.
 
 ```{r Prior trends, message=FALSE, warning=FALSE, comment=NA}
 
@@ -154,6 +155,7 @@ msummary(list(pretrend_t,pretrend_test),
          stars=c('*' = .1, '**' = .05, '***' = .01)) # Interpret each coefficient here
 
 ```
+\newpage
 ## QUESTION ONE C:
 
 
@@ -185,8 +187,9 @@ mydata <- mydata %>% mutate(relative_month = round((as.numeric(date) - 2020.211)
 
 
 ```
-
+\newpage
 #QUESTION ONE D
+\par
 There is a positive an significant effect of the pandemic on the popularity of the search term "sourdough".
 
 ```{r TWFE, message=FALSE, warning=FALSE, comment=NA}
@@ -214,9 +217,9 @@ msummary(list(dte),
 
  
 
-
+\newpage
 #QUESTION TWO
-
+\par
 #A 
 The rate of living organ donations for Louisiana and other states is stable over time.
 
@@ -237,25 +240,6 @@ summary(mydata2$AllDonors)
 
 
 summary(mydata2$WaitinglistAdditions)
-
-
-desc_table = data.frame(
-  Measure = c("Donations_(total)", "Donations_(Living)", 
-              "Waiting_list_Additions",
-  Mean  = c(mean(mydata2$AllDonors), mean(mydata2$LivingDonors), 
-           mean(mydata2$WaitinglistAdditions)),
-  SD = c(sd(mydata2$AllDonors), sd(mydata2$LivingDonors), 
-           sd(mydata2$WaitinglistAdditions))))
-
-#desc_table
-library(kableExtra)
-
-#   kable(
-#  desc_table,
-#  col.names = c("Measure", "*Mean*", "*SD*"),
-#  digits = 2,
-#  caption = "Means and Standard Deviations of three Variables"
-#  )
 
 ```
 
@@ -291,12 +275,15 @@ linegraph2+
             linetype=4, colour="black")+
   theme_classic()
 ```
-
+\newpage
 #B
-A typical difference-in-difference will not suffice here because, based on the line graph, the rates of living organ donations seems to be mimickking each other for the various states.There is no clear cut effect of a policy. it could be that most states have the policy and hence they may not serve as good controls. Hence, it will be advisable to create a "synthetic control" variable to measure the effect of the policy.
+\par
+A typical difference-in-difference will not suffice here because, based on the line graph, the rates of living organ donations seems to be mimicking each other for the various states. There is no clear cut effect of a policy. It could be that most states have the policy and hence they may not serve as good controls. Hence, it will be advisable to create a "synthetic control" variable to measure the effect of the policy.
 
+\newpage
 #C
-Based on poking around the data, i believe that Alaska, Idaho, Montana, Vermont, and Wyoming should be dropped as the rate of living organ donations were zero for each of them. Our focus is to examine whether a change from tax deductions to tax credit affects living organs donations hence such states where there are no donations may not be helpful in our analysis.
+\par
+Based on poking around the data, I believe that Alaska, Idaho, Montana, Vermont, and Wyoming should be dropped as the rate of living organ donations were zero for each of them. Our focus is to examine whether a change from tax deductions to tax credit affects living organs donations hence such states where there are no donations may not be helpful in our analysis.
 
 ```{r drop some states}
 
@@ -311,8 +298,9 @@ mydata2 <- mydata2 %>% filter(State  %!in% c("Alaska", "Idaho", "Montana",
 
 
 
-
+\newpage
 #D
+\par
 The synthetic control weights for lagged GDP and Delaware were relatively higher.
 
 ```{r Synthetic cont, message=FALSE, warning=FALSE, comment=NA}
@@ -360,8 +348,9 @@ donation_out %>%
   labs(title="Synthetic Control Weights") 
 ```
 
-
+\newpage
 #E
+\par 
 The synthetic control construction was not successful because, graphically, the "before the policy" trend were not close to each other.
 The reason could be that the real or observed Louisiana trend of living organs donations may be affected by time varying factors which do not affect the synthetic trend.
 
@@ -389,8 +378,9 @@ donation_out %>% plot_trends() +
 
 ```
 
+\newpage
 #F Checking effectiveness
-### Interpreting the Synthetic Control
+\par
 It can be realised that the policy only had a temporal positive effect on the rate of living organs donations but it declines over time.
 
 
@@ -420,8 +410,9 @@ donation_out %>% plot_differences() +
 
 ```
 
-
+\newpage
 #G
+\par 
 The change of date of implementation do not have any impact on the effectiveness of the policy. It is still not increasing the rate of living organ donations.
 
 ```{r Placebo tests, echo=TRUE, message=FALSE, comment=NA}
@@ -556,9 +547,9 @@ placebo_out %>% plot_differences()  +
 
 ```
 
-
+\newpage
 #H
-
+\par
 Moving from tax deductions to tax credits may have a long-term detrimental effect on the rate of living organ donations.
 
 
