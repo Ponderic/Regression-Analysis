@@ -1,0 +1,629 @@
+First coding
+!pip install scikit-learn
+#nbconvert[webpdf]
+!pip install matplotlib
+#import libraries
+#scikit-learn.org  #archive.ics.uci.edu
+!pip install mnist 
+Collecting mnist
+  Downloading mnist-0.2.2-py2.py3-none-any.whl (3.5 kB)
+Requirement already satisfied: numpy in c:\users\erico\anaconda3\lib\site-packages (from mnist) (1.21.5)
+Installing collected packages: mnist
+Successfully installed mnist-0.2.2
+import pandas as pd
+import numpy as np
+ 
+ 
+ 
+#import data with Pandas
+df=pd.read_excel('C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/FINAL PROJECT/SOUTH AFRICA PANEL DATABASE/NIDS SOUTH AFRICA/mydata.xlsx')
+type(df)
+df
+w_hhid	pid	year	coverage	diabetes	hypertension	self_employed	tot_che_10	tot_che_5	tot_che_15	...	employed	west_cape	east_cape	north_cape	free_state	kwazulu	north_west	gauteng	mpumalanga	limpopo
+0	0	304623	2012	0	0	0	0	0	0	0	...	0	0	0	1	0	0	0	0	0	0
+1	1	305268	2012	0	1	1	0	0	0	0	...	0	0	0	1	0	0	0	0	0	0
+2	2	319161	2012	0	0	0	0	0	0	0	...	0	0	1	0	0	0	0	0	0	0
+3	4	302034	2012	0	0	0	0	0	0	0	...	1	0	0	1	0	0	0	0	0	0
+4	5	303039	2012	0	0	0	1	0	0	0	...	0	0	0	0	0	0	1	0	0	0
+...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...
+28205	13777	307315	2017	0	0	0	0	0	0	0	...	1	0	0	0	0	0	0	0	0	1
+28206	13778	305715	2017	0	0	0	1	0	0	0	...	0	0	0	0	0	0	0	0	0	1
+28207	13779	303504	2017	0	0	0	0	0	0	0	...	1	0	0	0	1	0	0	0	0	0
+28208	13780	321655	2017	0	1	1	0	0	0	0	...	1	0	1	0	0	0	0	0	0	0
+28209	13783	706884	2017	0	0	0	0	0	1	0	...	0	0	0	0	0	0	0	0	0	0
+28210 rows × 35 columns
+
+ 
+df.describe()   #describe the dataset
+print(df.head())
+   w_hhid     pid  year  coverage  diabetes  hypertension  self_employed  \
+0       0  304623  2012         0         0             0              0   
+1       1  305268  2012         0         1             1              0   
+2       2  319161  2012         0         0             0              0   
+3       4  302034  2012         0         0             0              0   
+4       5  303039  2012         0         0             0              1   
+
+   tot_che_10  tot_che_5  tot_che_15  ...  employed  west_cape  east_cape  \
+0           0          0           0  ...         0          0          0   
+1           0          0           0  ...         0          0          0   
+2           0          0           0  ...         0          0          1   
+3           0          0           0  ...         1          0          0   
+4           0          0           0  ...         0          0          0   
+
+   north_cape  free_state  kwazulu  north_west  gauteng  mpumalanga  limpopo  
+0           1           0        0           0        0           0        0  
+1           1           0        0           0        0           0        0  
+2           0           0        0           0        0           0        0  
+3           1           0        0           0        0           0        0  
+4           0           0        0           1        0           0        0  
+
+[5 rows x 35 columns]
+df['hypertension'].describe()
+df['child_livingwith'].describe()
+import seaborn as sns
+sns.countplot(x='hypertension', data=df)
+<AxesSubplot:xlabel='hypertension', ylabel='count'>
+
+df.dtypes #see the different variables
+w_hhid                int64
+pid                   int64
+year                  int64
+coverage              int64
+diabetes              int64
+hypertension          int64
+self_employed         int64
+tot_che_10            int64
+tot_che_5             int64
+tot_che_15            int64
+non_che_40            int64
+non_che_45            int64
+non_che_35            int64
+oop                   int64
+sine_oop            float64
+age                   int64
+care_grant            int64
+disabled              int64
+child_livingwith      int64
+male                  int64
+african               int64
+ever_married          int64
+equi_size             int64
+IHSinc              float64
+BA_above              int64
+employed              int64
+west_cape             int64
+east_cape             int64
+north_cape            int64
+free_state            int64
+kwazulu               int64
+north_west            int64
+gauteng               int64
+mpumalanga            int64
+limpopo               int64
+dtype: object
+#group into dependent and independent variable
+#x=df[['care_grant', 'age' ... etc]] or
+x=df.drop(['w_hhid','pid','year', 'tot_che_5','tot_che_15','non_che_40','non_che_45','non_che_35','oop', 'west_cape','west_cape','north_cape','free_state','kwazulu','north_west','gauteng','mpumalanga','limpopo'], axis=1)
+y=df['tot_che_10']
+#or y=df[['tot_che_10']]
+
+print(x,y)
+
+#converting strings to numbers for machine learning to work properly
+
+#FOR x
+#redefine X and add '.values' below
+#x=df[['care_grant', 'age' ... etc]].values 
+
+#Le = LabelEncoder()
+#for i in range(len(x[0])):
+#    x[:,i]=Le.fit_transform(x[:,i])
+
+#print(x) #to check if converted
+
+##########################
+
+#for converting 'y,' we use mapping
+#assume y was 'wealth'
+#label_mapping{
+ #    'poorest':0,
+  #   'poorer':1,
+   #  'medium':2,
+    # 'richer':3,
+    #  'richest':4}
+       coverage  diabetes  hypertension  self_employed  tot_che_10  sine_oop  \
+0             0         0             0              0           0  0.000000   
+1             0         1             1              0           0  5.298342   
+2             0         0             0              0           0  0.000000   
+3             0         0             0              0           0  0.000000   
+4             0         0             0              1           0  2.776472   
+...         ...       ...           ...            ...         ...       ...   
+28205         0         0             0              0           0  0.000000   
+28206         0         0             0              1           0  0.000000   
+28207         0         0             0              0           0  0.000000   
+28208         0         1             1              0           0 -2.893444   
+28209         0         0             0              0           0  5.991471   
+
+       age  care_grant  disabled  child_livingwith  male  african  \
+0        1           0         0                 0     1        1   
+1        1           0         0                 0     1        0   
+2        1           0         0                 0     1        1   
+3        1           0         0                 0     0        1   
+4        1           0         0                 0     1        1   
+...    ...         ...       ...               ...   ...      ...   
+28205    1           0         0                 0     0        1   
+28206    1           0         0                 2     0        1   
+28207    1           0         0                 0     1        1   
+28208    1           0         0                 0     1        0   
+28209    1           0         0                 0     0        1   
+
+       ever_married  equi_size     IHSinc  BA_above  employed  east_cape  
+0                 0          2   8.699515         0         0          0  
+1                 1          5   9.104980         0         0          0  
+2                 0          4   6.907756         0         0          1  
+3                 0          1   9.629051         0         1          0  
+4                 1          1   8.006368         0         0          0  
+...             ...        ...        ...       ...       ...        ...  
+28205             0          1   8.366370         0         1          0  
+28206             0          1  11.002100         0         0          0  
+28207             0          4   8.935904         0         1          0  
+28208             1          1   9.392662         0         1          1  
+28209             0          1   9.574983         0         0          0  
+
+[28210 rows x 18 columns] 0        0
+1        0
+2        0
+3        0
+4        0
+        ..
+28205    0
+28206    0
+28207    0
+28208    0
+28209    0
+Name: tot_che_10, Length: 28210, dtype: int64
+#Setting up
+from sklearn.model_selection import train_test_split
+xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size=0.3, random_state=42)  #define the terms
+#plot using matplotlib
+print(x.shape)
+print(xtrain.shape)
+print(xtest.shape)
+(28210, 18)
+(19747, 18)
+(8463, 18)
+print(y.shape)
+print(ytrain.shape)
+print(ytest.shape)
+(28210,)
+(19747,)
+(8463,)
+ 
+(8463, 18)
+print(ytrain.value_counts(normalize=True))
+0    0.916139
+1    0.083861
+Name: tot_che_10, dtype: float64
+print(ytest.value_counts(normalize=True))
+0    0.91516
+1    0.08484
+Name: tot_che_10, dtype: float64
+#plt.scatter(year, diabetes, data=df)
+ 
+###############MACHINE LEARNING
+################  LOGISTIC REGRESSION PREDICTION  #LINEAR MODEL
+
+#Setting up
+#from sklearn.model_selection import train_test_split
+#xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size=0.3, random_state=42)  #define the terms
+
+from sklearn.linear_model import LogisticRegression
+logistic_model = LogisticRegression()
+logistic_model.fit(xtrain, ytrain)
+LogisticRegression()
+##prediction of model
+y_pred=logistic_model.predict(xtest)
+#y_pred
+from sklearn import metrics
+print(metrics.accuracy_score(ytest,y_pred))
+logistic_model.score(xtest, ytest)
+0.999763677183032
+0.999763677183032
+ 
+############     LINEAR REGRESSION MODEL
+#Setting up
+#from sklearn.model_selection import train_test_split
+#xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size=0.3, random_state=42)  #define the terms
+from sklearn import linear_model
+#from matplotlib import pyplot as plt
+l_reg=linear_model.LinearRegression()  #algorithm
+
+lm_model=l_reg.fit(xtrain, ytrain)
+lm_pred=lm_model.predict(xtest)
+print("lm_predictions:", lm_pred)
+print("R^2 value:", l_reg.score(x,y))  #R-squared value
+print("coedd:", l_reg.coef_)  #slope of all fit trend lines or linear reg model
+print("intercept:", l_reg.intercept_) 
+lm_predictions: [ 3.35185219e-16  1.01869897e-16  8.02370093e-16 ... -1.39662779e-15
+ -5.20654010e-16  4.47325418e-16]
+R^2 value: 1.0
+coedd: [-1.60086464e-14 -9.54795578e-16 -4.40886083e-16  2.90279339e-16
+  1.00000000e+00  1.57475746e-16  1.30556583e-16 -4.50070449e-16
+  2.07728217e-17 -2.01896712e-16  3.02942793e-16  5.58965219e-17
+  4.13781014e-17 -1.48130065e-17 -3.34147153e-17 -3.02305053e-16
+  1.35377097e-16 -9.36411353e-17]
+intercept: 3.0531133177191805e-16
+ 
+ 
+#########       KNN PREDICTION
+
+#Setting up
+#from sklearn.model_selection import train_test_split
+#xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size=0.3, random_state=42)  #define the terms
+
+from sklearn.neighbors import KNeighborsClassifier
+knn=KNeighborsClassifier(n_neighbors=1)
+#or knn2=neighbors.KNeighborsClassifier(n_neighbors=25, weights='uniform')
+#xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size=0.3, random_state=42)  #define the terms
+knn.fit(xtrain, ytrain)
+knn_y_pred = knn.predict(xtest)
+print(metrics.accuracy_score(ytest,knn_y_pred))
+print("prediction:", knn_y_pred)
+knn_acc=metrics.accuracy_score(ytest,knn_y_pred)
+print("accuracy:", knn_acc)
+
+#eliciting the actual and prdicted values
+a=173 #you can keep changing the index "a"
+print("actual value:", y[a])
+print("predicted value:", knn.predict(x)[a])
+0.9903107645043129
+prediction: [0 0 0 ... 0 0 0]
+accuracy: 0.9903107645043129
+actual value: 0
+predicted value: 0
+#########   OPTIMUM ALGORITHM #K FOLD CROSS-VALIDATION
+from sklearn.model_selection import cross_val_score
+knn=KNeighborsClassifier(n_neighbors=7)  #k=n_neighbors=7 gives maximum accuracy as will be found below
+scores=cross_val_score(knn, x, y, cv=10, scoring='accuracy') #10 iterations
+print(scores) #print all accuracy scores for 10 iteration before finding their mean, below
+print(scores.mean()) #mean value fo the 10 iterations predcitions
+[0.99397377 0.99184686 0.99468274 0.99361928 0.99645516 0.99929103
+ 0.99361928 0.98936547 0.99184686 0.99503722]
+0.9939737681673165
+#which k value from 1 to 45 gives maximum accuracy for 10 iterations?
+k_range=range(1,45)
+k_scores=[]
+for k in k_range:
+    knn=KNeighborsClassifier(n_neighbors = k)
+    scores=cross_val_score(knn, x, y, cv=10, scoring='accuracy')
+    k_scores.append(scores.mean())
+print(k_scores)
+[0.9918468628146048, 0.990464374335342, 0.9936547323644097, 0.9935483870967741, 0.9940446650124068, 0.9937965260545905, 0.9939737681673165, 0.9937256292095002, 0.9936547323644097, 0.9936192839418645, 0.993371144984048, 0.9936901807869548, 0.9935838355193194, 0.9936547323644097, 0.9932647997164127, 0.9931584544487769, 0.9932293512938675, 0.9933711449840482, 0.9928039702233249, 0.9931230060262319, 0.9929812123360511, 0.9928039702233249, 0.9927330733782348, 0.9925558312655085, 0.9922722438851471, 0.9926621765331444, 0.9920595533498758, 0.9922722438851471, 0.9918823112371499, 0.9917050691244238, 0.9915987238567882, 0.9913860333215171, 0.9913860333215172, 0.991563275434243, 0.991173342786246, 0.9914569301666074, 0.9912796880538816, 0.9910669975186105, 0.9909252038284295, 0.9908543069833392, 0.9907479617157037, 0.9906061680255229, 0.9904998227578874, 0.9903934774902519]
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.plot(k_range, k_scores)
+plt.xlabel('K value for KNN algorithm')
+plt.ylabel('mean accuracy scores')
+#best value of k=n_neighbors that gives maximum accuracy scores is k=n_neighbors=7 or 8
+Text(0, 0.5, 'mean accuracy scores')
+
+ 
+###########   SUPPORT VECTOR MACHINES
+
+#Setting up
+#from sklearn.model_selection import train_test_split
+#xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size=0.3, random_state=42)  #define the terms
+from sklearn import svm
+svm=svm.SVC()
+svm.fit(xtrain, ytrain)
+print(svm)
+svm_y_pred = svm.predict(xtest)
+svm_accu=print(metrics.accuracy_score(ytest,svm_y_pred))
+print("svm_predictions:",svm_y_pred)
+print("actual", ytest)
+print("accuracy:", svm_accu)
+SVC()
+0.9996455157745481
+predictions: [0 0 0 ... 0 0 0]
+actual 17742    0
+10349    0
+7375     0
+21723    0
+8197     0
+        ..
+24096    0
+8721     0
+18599    0
+27525    0
+27287    0
+Name: tot_che_10, Length: 8463, dtype: int64
+accuracy: None
+#eliciting the actual and prdicted values
+b=103 #you can keep changing the index "a"
+print("actual value:", y[b])
+print("predicted value:", svm.predict(x)[b])
+actual value: 0
+predicted value: 0
+#classes=['poorest', 'poorer', 'medium', 'richer', 'richest']
+#assume y is 'wealth'
+
+#for i in range(len(svm_predictions)):
+ #   print(classes[svm_predictions[i]])
+ 
+############ K-MEANS
+
+
+#Setting up
+
+#xtrain, xtest, ytrain, ytest = train_test_split(x,y,test_size=0.3, random_state=42) 
+#define the terms #random state helps to keep randomization in the data constant
+from sklearn.cluster import KMeans
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import scale
+import pandas as pd
+#from sklearn.model_selection import train_test_split
+KMmodel=KMeans(n_clusters=2, random_state=0)
+KMmodel.fit(xtrain)
+KMeans(n_clusters=2, random_state=0)
+KMpredict=model.predict(xtest)
+labels=model.labels_
+print('labels', labels)
+print('predictions:', KMpredict)
+print('accuracy:', accuracy_score(ytest, KMpredict))
+print('actual:', ytest)
+labels [1 1 1 ... 1 1 1]
+predictions: [1 1 1 ... 1 1 0]
+accuracy: 0.15739099610067353
+actual: 17742    0
+10349    0
+7375     0
+21723    0
+8197     0
+        ..
+24096    0
+8721     0
+18599    0
+27525    0
+27287    0
+Name: tot_che_10, Length: 8463, dtype: int64
+print(pd.crosstab(ytrain, labels)) #flip it if the one and zeros were interchanged
+col_0          0      1
+tot_che_10             
+0           1612  16479
+1            162   1494
+#bench_k_means(model, '1, x')
+ 
+########### AI AND DEEP LEARNING
+
+#find PATTERNS
+ 
+ ###################  NEURAL NETWORKS
+from PIL import Image #call images from Python Imaging Library
+import mnist   #MNIST data set # it is used because it has images #df doesn't have images
+import numpy as np
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import confusion_matrix
+
+#you can use google colab instead of Python for this analysis
+ 
+x_train=mnist.train_images()
+y_train=mnist.train_labels()
+
+x_test=mnist.test_images()
+y_test=mnist.test_labels()
+print('x_train', x_train)
+print('x_TEST', x_test)
+print('y_train', y_train)
+x_train [[0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ ...
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]]
+x_TEST [[0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ ...
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]
+ [0. 0. 0. ... 0. 0. 0.]]
+y_train [5 0 4 ... 5 6 8]
+print(x_train.ndim)
+2
+print(x_train.shape)
+(60000, 784)
+x_train=x_train.reshape(-1, 28*28) #reshaping the above
+x_test=x_test.reshape(-1, 28*28) 
+print(x_train[0])
+[  0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   3  18  18  18 126 136 175  26 166 255
+ 247 127   0   0   0   0   0   0   0   0   0   0   0   0  30  36  94 154
+ 170 253 253 253 253 253 225 172 253 242 195  64   0   0   0   0   0   0
+   0   0   0   0   0  49 238 253 253 253 253 253 253 253 253 251  93  82
+  82  56  39   0   0   0   0   0   0   0   0   0   0   0   0  18 219 253
+ 253 253 253 253 198 182 247 241   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0  80 156 107 253 253 205  11   0  43 154
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0  14   1 154 253  90   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0 139 253 190   2   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0  11 190 253  70   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0  35 241
+ 225 160 108   1   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0  81 240 253 253 119  25   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0  45 186 253 253 150  27   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0  16  93 252 253 187
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0 249 253 249  64   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0  46 130 183 253
+ 253 207   2   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0  39 148 229 253 253 253 250 182   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0  24 114 221 253 253 253
+ 253 201  78   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0  23  66 213 253 253 253 253 198  81   2   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0  18 171 219 253 253 253 253 195
+  80   9   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+  55 172 226 253 253 253 253 244 133  11   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0 136 253 253 253 212 135 132  16
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0
+   0   0   0   0   0   0   0   0   0   0]
+x_train=(x_train/256)
+x_test=(x_test/256)
+print(x_train[0])
+[0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.01171875 0.0703125  0.0703125  0.0703125
+ 0.4921875  0.53125    0.68359375 0.1015625  0.6484375  0.99609375
+ 0.96484375 0.49609375 0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.1171875  0.140625   0.3671875  0.6015625
+ 0.6640625  0.98828125 0.98828125 0.98828125 0.98828125 0.98828125
+ 0.87890625 0.671875   0.98828125 0.9453125  0.76171875 0.25
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.19140625
+ 0.9296875  0.98828125 0.98828125 0.98828125 0.98828125 0.98828125
+ 0.98828125 0.98828125 0.98828125 0.98046875 0.36328125 0.3203125
+ 0.3203125  0.21875    0.15234375 0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.0703125  0.85546875 0.98828125
+ 0.98828125 0.98828125 0.98828125 0.98828125 0.7734375  0.7109375
+ 0.96484375 0.94140625 0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.3125     0.609375   0.41796875 0.98828125
+ 0.98828125 0.80078125 0.04296875 0.         0.16796875 0.6015625
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.0546875  0.00390625 0.6015625  0.98828125 0.3515625
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.54296875 0.98828125 0.7421875  0.0078125  0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.04296875
+ 0.7421875  0.98828125 0.2734375  0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.13671875 0.94140625
+ 0.87890625 0.625      0.421875   0.00390625 0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.31640625 0.9375     0.98828125
+ 0.98828125 0.46484375 0.09765625 0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.17578125 0.7265625  0.98828125 0.98828125
+ 0.5859375  0.10546875 0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.0625     0.36328125 0.984375   0.98828125 0.73046875
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.97265625 0.98828125 0.97265625 0.25       0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.1796875  0.5078125  0.71484375 0.98828125
+ 0.98828125 0.80859375 0.0078125  0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.15234375 0.578125
+ 0.89453125 0.98828125 0.98828125 0.98828125 0.9765625  0.7109375
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.09375    0.4453125  0.86328125 0.98828125 0.98828125 0.98828125
+ 0.98828125 0.78515625 0.3046875  0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.08984375 0.2578125  0.83203125 0.98828125
+ 0.98828125 0.98828125 0.98828125 0.7734375  0.31640625 0.0078125
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.0703125  0.66796875
+ 0.85546875 0.98828125 0.98828125 0.98828125 0.98828125 0.76171875
+ 0.3125     0.03515625 0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.21484375 0.671875   0.8828125  0.98828125 0.98828125 0.98828125
+ 0.98828125 0.953125   0.51953125 0.04296875 0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.53125    0.98828125
+ 0.98828125 0.98828125 0.828125   0.52734375 0.515625   0.0625
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.         0.         0.
+ 0.         0.         0.         0.        ]
+clf=MLPClassifier(solver='adam', activation='relu', hidden_layer_sizes=(64,64))
+clf.fit(xtrain, ytrain)
+MLPClassifier(hidden_layer_sizes=(64, 64))
+#prediction=clf.predict(x_test)
+ 
+#acc=confusion_matrix(y_test, prediction)
+#print(acc)
+#def accuracy(cm):
+#    diagonal=cm.trace(
+ #       elem=cm.sum
+ #       return diagonal/elem(confusion_matrix)   #download "gimp" from google to test our model
+ 
+ 
