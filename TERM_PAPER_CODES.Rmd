@@ -1,0 +1,1330 @@
+---
+title: "RESEARCH"
+author: "Eric Opoku"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+### 0. Load the packages we will need for this file ####
+#library(vtable) # For making balance tables
+#library(MatchIt) # Main matching package
+### 0. Load the packages we will need for this file ####
+#library(tidyverse) # load the installed package for each new session of R
+library(broom)
+library(modelsummary) # For making regression tables
+#library(gsynth) # For synthetic controls
+#library(gghighlight) # For figures 
+library(lubridate) # For figures
+library(stargazer) # For tables
+library(mice)
+library(dplyr)  #data manipulation and wrangling
+library(data.table)  #data manipulation and wrangling
+library(lme4)
+library(lessR)
+library(psych)
+#library(MatchIt)
+library(haven)
+library(expss) #value labelling from spss style
+#install.packages("readstata13")
+library(tidyverse) # load the installed package for each new session of R
+library(marginaleffects) # To calculate marginal effects
+library(kableExtra) # Alternative table package
+#set working directory
+#setwd("C:/Users/erico/Desktop/DISSERTATION/GDHS DATA/GDHS 2003/GH_2003_DHS")
+library(readstata13)
+library(GJRM)
+library(fixest)
+library(plm)
+library(ivprobit)
+```
+
+```{r set working directory, message=FALSE, warning=FALSE}
+setwd("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER TWO/HAD5746H S APPLIED HLTHECONOMETRICS II/TERM PAPER")
+```
+##Objective:
+
+#1. EFFECT OF FREE HEALTH CARE POLICY ON OOP IN  SOUTH AFRICA
+
+
+#LOOK AT QUANTILE REGRESSION AND REGRESSION DISCONTINUITY OF OOP
+
+#WHEN A CHILD IS LESS THAN SIX YEARS, THEY DO NOT PAY OOP. DOES THIS MEAN THAT OOP AT AGE IS GOING TO REDUCE
+BECAUSE MOST HEALTH CARE WOULD HAVE BEEN SOUGHT IN YEAR SIX?
+
+##VARIABLES
+My Variables are selected based on the Andersen framework:
+
+
+PREDISPOSING:
+Demographic:household member age above 70 years, sex, marital
+Social structure:education, race, occupation, household size
+
+ENABLING:
+Family: income, health insurance subscriptions, type of regular source or whether they receive grants/farm.
+
+Community: region, urban/rural, price of health services/premium
+
+ILLNESS LEVEL:
+Perceived: Disability, chronic disease.
+
+
+
+#############################
+
+Household expenditure per month, total expenditure, non-food expenditure.
+
+#############################
+
+
+
+```{r message=FALSE, warning=FALSE,  comment=NA, MERGING}
+
+############ Wave 3 (collected 2012)
+
+#define data frames
+child_12<-data.frame(read_dta("Child_W3_Anon_V3.0.0.dta"))
+Adult_12<-data.frame(read_dta("Adult_W3_Anon_V3.0.0.dta"))
+hh_12<-data.frame(read_dta("HHQuestionnaire_W3_Anon_V3.0.0.dta"))
+
+
+#put all data frames into list
+df_list_12 <- list(child_12, Adult_12, hh_12)
+
+
+
+
+library(tidyverse)
+
+
+#merge all data frames together
+df_12<- df_list_12 %>% reduce(full_join, by='w3_hhid')
+
+
+#View(df_12)
+
+##############################################
+#merge all data frames together
+#Reduce(function(x, y) merge(x, y, all=TRUE), df_list_12)
+
+  
+#date of birth
+table(df_12$w3_c_dob_y)
+table(df_12$w3_c_dob_m)
+
+#year
+colnames(df_12)[colnames(df_12) == "w3_h_intrv_y"] <- "year"
+#str(df_12$w3_h_intrv_y)
+
+
+
+df_12$year<-replace(df_12$year, df_12$year<2014, 2012)
+var_lab(df_12$year) = "a14_y - Date of interview (year)"
+var_lab(df_12$year)
+nrow(df_12)
+
+table(df_12$year)
+View(df_12$year)
+
+
+
+
+########################
+
+
+
+
+####################   WAVE 4 MERGING (collected 2014-2015)
+#######
+
+#define data frames
+child_15<-data.frame(read_dta("Child_W4_Anon_V2.0.0.dta"))
+Adult_15<-data.frame(read_dta("Adult_W4_Anon_V2.0.0.dta"))
+hh_15<-data.frame(read_dta("HHQuestionnaire_W4_Anon_V2.0.0.dta"))
+
+
+#put all data frames into list
+df_list_15 <- list(child_15, Adult_15, hh_15)
+
+
+
+
+library(tidyverse)
+
+
+#merge all data frames together
+df_15<- df_list_15 %>% reduce(full_join, by='w4_hhid')
+
+
+#View(df_15)
+
+  
+#date of birth
+table(df_15$w4_c_dob_y)
+table(df_15$w4_c_dob_m)
+
+#year
+colnames(df_15)[colnames(df_15) == "w4_h_intrv_y"] <- "year"
+#str(mydatawv3$w3_h_intrv_y)
+
+
+
+df_15$year<-replace(df_15$year, df_15$year<2016, 2015)
+var_lab(df_15$year) = "a14_y - Date of interview (year)"
+var_lab(df_15$year)
+nrow(df_15)
+
+table(df_15$year)
+View(df_15$year)
+
+
+
+#########   WAVE 5 MERGING  (collected 2017)
+
+
+
+
+
+######
+
+
+#define data frames
+child_17<-data.frame(read_dta("Child_W5_Anon_V1.0.0.dta"))
+Adult_17<-data.frame(read_dta("Adult_W5_Anon_V1.0.0.dta"))
+hh_17<-data.frame(read_dta("HHQuestionnaire_W5_Anon_V1.0.0.dta"))
+
+
+#put all data frames into list
+df_list_17 <- list(child_17, Adult_17, hh_17)
+
+
+
+
+library(tidyverse)
+
+
+#merge all data frames together
+df_17<- df_list_17 %>% reduce(full_join, by='w5_hhid')
+
+
+#View(df_17)
+
+  
+#date of birth
+table(df_17$w5_c_dob_y)
+table(df_17$w5_c_dob_m)
+
+#year
+colnames(df_17)[colnames(df_17) == "w5_h_intrv_y"] <- "year"
+#str(mydatawv3$w3_h_intrv_y)
+
+
+
+df_17$year<-replace(df_17$year, df_17$year<2018, 2017)
+var_lab(df_17$year) = "a14_y - Date of interview (year)"
+var_lab(df_17$year)
+nrow(df_17)
+
+table(df_17$year)
+View(df_17$year)
+
+
+#########
+
+
+```
+###############################################
+################################################
+
+
+
+```{r dependent vars wave 3, message=FALSE, warning=FALSE, comment=NA}
+###########################################################
+######################################################
+###########################################################
+###########################################################
+
+#WAVE 3
+#Dependent variables
+
+
+##oop
+#colnames(mydatawv4) #to find all column names
+#mydatawv4_new<- select (mydatawv4, w4_h_nfmedaidspn, w4_h_nfdocspn,w4_h_nfhspspn,w4_h_nfmedspn,w4_h_nftradspn,w4_h_nfhomspn)
+mydatawv3$oop <- rowSums(mydatawv3[, c("w3_h_nfmedaidspn", "w3_h_nfdocspn","w3_h_nfhspspn","w3_h_nfmedspn","w3_h_nftradspn","w3_h_nfhomspn")],na.rm=T)
+#create a new column variable for OOP   
+#mydatawv4$oop<-((mydatawv4$oop)*12) #for the year
+
+
+###################
+#descriptives
+
+summary(mydatawv3$oop)
+describe(mydatawv3$oop)
+
+
+mydatawv3$sine_oop<-asinh(mydatawv3$oop) #clean OOP and use sine_oop as Dependent var
+
+
+
+
+
+```
+
+
+
+```{r dependent vars wave 4, message=FALSE, warning=FALSE, comment=NA}
+######################################################
+###########################################################
+
+#WAVE 4
+#Dependent variables
+
+
+##oop
+#colnames(mydatawv4) #to find all column names
+#mydatawv4_new<- select (mydatawv4, w4_h_nfmedaidspn, w4_h_nfdocspn,w4_h_nfhspspn,w4_h_nfmedspn,w4_h_nftradspn,w4_h_nfhomspn)
+mydatawv4$oop <- rowSums(mydatawv4[, c("w4_h_nfmedaidspn", "w4_h_nfdocspn","w4_h_nfhspspn","w4_h_nfmedspn","w4_h_nftradspn","w4_h_nfhomspn")],na.rm=T)
+#create a new column variable for OOP   
+#mydatawv4$oop<-((mydatawv4$oop)*12) #for the year
+
+#descriptives
+
+summary(mydatawv4$oop)
+describe(mydatawv4$oop)
+
+
+
+mydatawv4$sine_oop<-asinh(mydatawv4$oop) #clean OOP and use sine_oop as Dependent var
+
+
+```
+
+
+```{r dependent vars wave 5, message=FALSE, warning=FALSE, comment=NA}
+
+######################################################
+#WAVE 5
+#Dependent variables
+
+##oop
+#colnames(mydatawv4) #to find all column names
+#mydatawv4_new<- select (mydatawv4, w4_h_nfmedaidspn, w4_h_nfdocspn,w4_h_nfhspspn,w4_h_nfmedspn,w4_h_nftradspn,w4_h_nfhomspn)
+mydatawv5$oop <- rowSums(mydatawv5[, c("w5_h_nfmedaidspn", "w5_h_nfdocspn","w5_h_nfhspspn","w5_h_nfmedspn","w5_h_nftradspn","w5_h_nfhomspn")],na.rm=T)
+#create a new column variable for OOP   
+#mydatawv4$oop<-((mydatawv4$oop)*12) #for the year
+
+
+#Descriptives
+
+summary(mydatawv5$oop)
+describe(mydatawv5$oop)
+
+
+mydatawv5$sine_oop<-asinh(mydatawv5$oop) #clean OOP and use sine_oop as Dependent var
+
+
+```
+
+
+
+
+```{r Independent variables, message=FALSE, warning=FALSE, comment=NA}
+
+#########################################################
+
+##################
+summary(mydatawv3$oop)
+describe(mydatawv3$oop)
+
+
+############
+
+
+
+ 
+##########################################################################
+
+
+#########################################################
+
+
+#wave 3
+##PREDISPOSING
+#DEMOGRAPHIC: age, gender, marital status, past illness (or diagnosis)
+
+#SOCIAL STRUCTURE: education, race, occupation, family size, ethnicity, rural/urban
+
+
+##ENABLING
+#FAMILY: Income, health insurance, source of income/grants
+
+#PERCEIVED
+#disability
+
+#main ind var
+#insurance coverage 
+mydatawv3 <- mydatawv3 %>% mutate(coverage = ifelse(w3_h_nfmedaid<2, 1, 0))
+table(mydatawv3$coverage)
+
+#premium
+#mydatawv4$premium<- mydatawv4$w4_h_nfmedaidspn
+#mydatawv4$premium <- replace(mydatawv4$premium, mydatawv4$premium < 0, 0)
+
+
+#age >=70 years...2014-70
+mydatawv3 <- mydatawv3 %>% mutate(age = ifelse(w3_a_dob_y>=1942, 1, 0))
+count(mydatawv3, age)
+table(mydatawv3$age)
+#gender
+count(mydatawv3, w3_a_gen)
+table(mydatawv3$w3_a_gen)
+mydatawv3$male<-ifelse(mydatawv3$w3_a_gen<2,1,0)
+#race
+count(mydatawv3, w3_a_popgrp)
+table(mydatawv3$w3_a_popgrp)
+mydatawv3$african<-ifelse(mydatawv3$w3_a_popgrp<2,1,0)
+#ever married or never married
+count(mydatawv3, w3_a_marstt)
+table(mydatawv3$w3_a_marstt)
+mydatawv3$ever_married<-ifelse(mydatawv3$w3_a_marstt<5,1,0)
+#province
+count(mydatawv3, w3_a_brnprov)
+table(mydatawv3$w3_a_brnprov)
+mydatawv3$west_cape<-ifelse(mydatawv3$w3_a_brnprov==1,1,0)
+mydatawv3$east_cape<-ifelse(mydatawv3$w3_a_brnprov==2,1,0)
+mydatawv3$north_cape<-ifelse(mydatawv3$w3_a_brnprov==3,1,0)
+mydatawv3$free_state<-ifelse(mydatawv3$w3_a_brnprov==4,1,0)
+mydatawv3$kwazulu<-ifelse(mydatawv3$w3_a_brnprov==5,1,0)
+mydatawv3$north_west<-ifelse(mydatawv3$w3_a_brnprov==6,1,0)
+mydatawv3$gauteng<-ifelse(mydatawv3$w3_a_brnprov==7,1,0)
+mydatawv3$mpumalanga<-ifelse(mydatawv3$w3_a_brnprov==8,1,0)
+mydatawv3$limpopo<-ifelse(mydatawv3$w3_a_brnprov==9,1,0)
+ 
+#number of children living with respondent #IV
+count(mydatawv3, w3_a_bhlive_n)
+table(mydatawv3$w3_a_bhlive_n)
+mydatawv3$child_livingwith<-as.numeric(mydatawv3$w3_a_bhlive_n)
+mydatawv3$child_livingwith <- replace(mydatawv3$child_livingwith, mydatawv3$child_livingwith < 0, 0)
+#educational level
+count(mydatawv3, w3_a_edterlev)
+table(mydatawv3$w3_a_edterlev)
+mydatawv3$BA_above<-ifelse(mydatawv3$w3_a_edterlev>=20,1,0)
+table(mydatawv3$BA_above)
+#employed
+count(mydatawv3, w3_a_em1)
+table(mydatawv3$w3_a_em1)
+mydatawv3$employed<-ifelse(mydatawv3$w3_a_em1<2,1,0)
+#care dependency grant
+mydatawv3 <- mydatawv3 %>% mutate(care_grant = ifelse(w3_a_inccare<2, 1, 0))
+table(mydatawv3$care_grant)
+#ILLness
+#disabled
+mydatawv3 <- mydatawv3 %>% mutate(disabled = ifelse(w3_a_hlser<2, 1, 0))
+table(mydatawv3$disabled)
+
+#diabetes
+mydatawv3 <- mydatawv3 %>% mutate(diabetes = ifelse(w3_a_hldia<2, 1, 0))
+
+#high blood pressure or hypertension
+mydatawv3 <- mydatawv3 %>% mutate(hypertension = ifelse(w3_a_hlbp <2, 1, 0))
+
+
+#income household
+summary(mydatawv3$w3_h_tinc)
+describe(mydatawv3$w3_h_tinc)
+
+mydatawv3$inc<-mydatawv3$w3_h_tinc #*12
+
+###############################################################
+summary(mydatawv3$inc)
+describe(mydatawv3$inc)
+
+#################################################################
+mydatawv3$IHSinc<-asinh(mydatawv3$inc)
+mydatawv3$IHSinc<-as.numeric(mydatawv3$IHSinc) #inverse hyperbolic sine transformation
+mydatawv3<-mydatawv3[!is.na(mydatawv3$IHSinc),]
+
+#household size
+mydatawv3$equi_size<-mydatawv3$w3_h_dwlrms
+ 
+#IV #self-employed
+mydatawv3 <- mydatawv3 %>% mutate(self_employed = ifelse(w3_a_ems<2, 1, 0))
+table(mydatawv3$self_employed)
+ 
+ 
+
+ 
+##########################################################################
+
+
+#########################################################
+#wave 4
+#independent variables
+#Independent variables
+#age, gender, race, marital status, children?,  educational level, employment status, place of residence,
+#wealth quintile, non-communicable disease, and household size,  government grants, money spent on: health insurance, hospitalization, medical supplies, traditional healers...
+#age
+#https://stackoverflow.com/questions/31126726/efficient-and-accurate-age-calculation-in-years-months-or-weeks-in-r-given-b
+#https://stackoverflow.com/questions/42824703/calculating-age-in-r-from-dob
+
+
+##PREDISPOSING
+#DEMOGRAPHIC: age, gender, marital status, past illness (or diagnosis)
+
+#SOCIAL STRUCTURE: education, race, occupation, family size, ethnicity, rural/urban
+
+
+##ENABLING
+#FAMILY: Income, health insurance, source of income/grants
+
+#PERCEIVED
+#disability
+
+##################
+summary(mydatawv4$oop)
+describe(mydatawv4$oop)
+
+
+summary(mydatawv4$non_food_exp)
+describe(mydatawv4$non_food_exp)
+
+summary(mydatawv4$total_exp)
+describe(mydatawv4$total_exp)
+
+
+summary(mydatawv4$food_exp)
+describe(mydatawv4$food_exp)
+
+
+
+
+###################
+
+
+#main ind var
+#insurance coverage 
+mydatawv4 <- mydatawv4 %>% mutate(coverage = ifelse(w4_h_nfmedaid<2, 1, 0))
+table(mydatawv4$coverage)
+
+#premium
+#mydatawv4$premium<- mydatawv4$w4_h_nfmedaidspn
+#mydatawv4$premium <- replace(mydatawv4$premium, mydatawv4$premium < 0, 0)
+
+
+#age >=70 years...2014-70
+mydatawv4 <- mydatawv4 %>% mutate(age = ifelse(w4_a_dob_y>=1944, 1, 0))
+count(mydatawv4, age)
+table(mydatawv4$age)
+#gender
+count(mydatawv4, w4_a_gen)
+table(mydatawv4$w4_a_gen)
+mydatawv4$male<-ifelse(mydatawv4$w4_a_gen<2,1,0)
+#race
+count(mydatawv4, w4_a_popgrp)
+table(mydatawv4$w4_a_popgrp)
+mydatawv4$african<-ifelse(mydatawv4$w4_a_popgrp<2,1,0)
+#ever married or never married
+count(mydatawv4, w4_a_evmar)
+table(mydatawv4$w4_a_evmar)
+mydatawv4$ever_married<-ifelse(mydatawv4$w4_a_evmar==1,1,0)
+table(mydatawv4$ever_married)
+#province
+count(mydatawv4, w4_a_brnprov)
+table(mydatawv4$w4_a_brnprov)
+mydatawv4$west_cape<-ifelse(mydatawv4$w4_a_brnprov==1,1,0)
+mydatawv4$east_cape<-ifelse(mydatawv4$w4_a_brnprov==2,1,0)
+mydatawv4$north_cape<-ifelse(mydatawv4$w4_a_brnprov==3,1,0)
+mydatawv4$free_state<-ifelse(mydatawv4$w4_a_brnprov==4,1,0)
+mydatawv4$kwazulu<-ifelse(mydatawv4$w4_a_brnprov==5,1,0)
+mydatawv4$north_west<-ifelse(mydatawv4$w4_a_brnprov==6,1,0)
+mydatawv4$gauteng<-ifelse(mydatawv4$w4_a_brnprov==7,1,0)
+mydatawv4$mpumalanga<-ifelse(mydatawv4$w4_a_brnprov==8,1,0)
+mydatawv4$limpopo<-ifelse(mydatawv4$w4_a_brnprov==9,1,0)
+ 
+#number of children living with respondent #IV
+count(mydatawv4, w4_a_bhlive_n)
+table(mydatawv4$w4_a_bhlive_n)
+mydatawv4$child_livingwith<-as.numeric(mydatawv4$w4_a_bhlive_n)
+mydatawv4$child_livingwith <- replace(mydatawv4$child_livingwith, mydatawv4$child_livingwith < 0, 0)
+#educational level
+count(mydatawv4, w4_a_edterlev)
+table(mydatawv4$w4_a_edterlev)
+mydatawv4$BA_above<-ifelse(mydatawv4$w4_a_edterlev>=20,1,0)
+table(mydatawv4$BA_above)
+#employed
+count(mydatawv4, w4_a_em1)
+table(mydatawv4$w4_a_em1)
+mydatawv4$employed<-ifelse(mydatawv4$w4_a_em1<2,1,0)
+#care dependency grant
+mydatawv4 <- mydatawv4 %>% mutate(care_grant = ifelse(w4_a_inccare<2, 1, 0))
+table(mydatawv4$care_grant)
+#ILLness
+#disabled
+mydatawv4 <- mydatawv4 %>% mutate(disabled = ifelse(w4_a_hlser<2, 1, 0))
+table(mydatawv4$disabled)
+
+#diabetes
+mydatawv4 <- mydatawv4 %>% mutate(diabetes = ifelse(w4_a_hldia<2, 1, 0))
+
+#high blood pressure or hypertension
+mydatawv4 <- mydatawv4 %>% mutate(hypertension = ifelse(w4_a_hlbp <2, 1, 0))
+
+#income household
+summary(mydatawv4$w4_h_tinc)
+describe(mydatawv4$w4_h_tinc)
+mydatawv4$inc<-mydatawv4$w4_h_tinc #*12
+
+
+###############################################################
+
+
+#################################################################
+
+mydatawv4$IHSinc<-asinh(mydatawv4$inc)
+mydatawv4$IHSinc<-as.numeric(mydatawv4$IHSinc) #inverse hyperbolic sine transformation
+mydatawv4<-mydatawv4[!is.na(mydatawv4$IHSinc),]
+
+#household size
+mydatawv4$equi_size<-mydatawv4$w4_h_dwlrms
+ 
+#IV #self-employed
+mydatawv4 <- mydatawv4 %>% mutate(self_employed = ifelse(w4_a_ems<2, 1, 0))
+table(mydatawv4$self_employed)
+ 
+##########################################################################
+#wave 5
+#Dependent variables
+#Independent variables
+#age, gender, race, marital status, children?,  educational level, employment status, place of residence,
+#wealth quintile, non-communicable disease, and household size,  government grants, money spent on: health insurance, hospitalization, medical supplies, traditional healers...
+#age
+#https://stackoverflow.com/questions/31126726/efficient-and-accurate-age-calculation-in-years-months-or-weeks-in-r-given-b
+#https://stackoverflow.com/questions/42824703/calculating-age-in-r-from-dob
+
+
+##################
+summary(mydatawv5$oop)
+describe(mydatawv5$oop)
+
+
+summary(mydatawv5$non_food_exp)
+describe(mydatawv5$non_food_exp)
+
+summary(mydatawv5$total_exp)
+describe(mydatawv5$total_exp)
+
+
+summary(mydatawv5$food_exp)
+describe(mydatawv5$food_exp)
+
+
+
+###################
+
+#insurance premium 
+mydatawv5 <- mydatawv5 %>% mutate(coverage = ifelse(w5_h_nfmedaid<2, 1, 0))
+table(mydatawv5$coverage)
+
+#premium
+#mydatawv5$premium<- mydatawv5$w5_h_nfmedaidspn
+#mydatawv5$premium <- replace(mydatawv5$premium, mydatawv5$premium < 0, 0)
+
+
+#age >=70 years...2016-70
+mydatawv5 <- mydatawv5 %>% mutate(age = ifelse(w5_a_dob_y>=1946, 1, 0))
+count(mydatawv5, age)
+table(mydatawv5$age)
+#gender
+count(mydatawv5, w5_a_gen)
+table(mydatawv5$w5_a_gen)
+mydatawv5$male<-ifelse(mydatawv5$w5_a_gen<2,1,0)
+#race
+count(mydatawv5, w5_a_popgrp)
+table(mydatawv5$w5_a_popgrp)
+mydatawv5$african<-ifelse(mydatawv5$w5_a_popgrp<2,1,0)
+#ever married or never married
+count(mydatawv5, w5_a_evmar)
+table(mydatawv5$w5_a_evmar)
+mydatawv5$ever_married<-ifelse(mydatawv5$w5_a_evmar<2,1,0)
+#province
+count(mydatawv5, w5_a_brnprov)
+table(mydatawv5$w5_a_brnprov)
+mydatawv5$west_cape<-ifelse(mydatawv5$w5_a_brnprov==1,1,0)
+mydatawv5$east_cape<-ifelse(mydatawv5$w5_a_brnprov==2,1,0)
+mydatawv5$north_cape<-ifelse(mydatawv5$w5_a_brnprov==3,1,0)
+mydatawv5$free_state<-ifelse(mydatawv5$w5_a_brnprov==4,1,0)
+mydatawv5$kwazulu<-ifelse(mydatawv5$w5_a_brnprov==5,1,0)
+mydatawv5$north_west<-ifelse(mydatawv5$w5_a_brnprov==6,1,0)
+mydatawv5$gauteng<-ifelse(mydatawv5$w5_a_brnprov==7,1,0)
+mydatawv5$mpumalanga<-ifelse(mydatawv5$w5_a_brnprov==8,1,0)
+mydatawv5$limpopo<-ifelse(mydatawv5$w5_a_brnprov==9,1,0)
+ 
+#number of children living with respondent
+count(mydatawv5, w5_a_bhlive_n)
+table(mydatawv5$w5_a_bhlive_n)
+mydatawv5$child_livingwith<-as.numeric(mydatawv5$w5_a_bhlive_n)
+mydatawv5$child_livingwith <- replace(mydatawv5$child_livingwith, mydatawv5$child_livingwith < 0, 0)
+#educational level
+count(mydatawv5, w5_a_edterlev)
+table(mydatawv5$w5_a_edterlev)
+mydatawv5$BA_above<-ifelse(mydatawv5$w5_a_edterlev>=20,1,0)
+table(mydatawv5$BA_above)
+#employed
+count(mydatawv5, w5_a_em1)
+table(mydatawv5$w5_a_em1)
+mydatawv5$employed<-ifelse(mydatawv5$w5_a_em1<2,1,0)
+#care dependency grant
+mydatawv5 <- mydatawv5 %>% mutate(care_grant = ifelse(w5_a_inccare<2, 1, 0))
+table(mydatawv5$care_grant)
+#ILLness
+#disabled
+mydatawv5 <- mydatawv5 %>% mutate(disabled = ifelse(w5_a_hlser<2, 1, 0))
+table(mydatawv5$disabled)
+
+#diabetes
+mydatawv5 <- mydatawv5 %>% mutate(diabetes = ifelse(w5_a_hldia<2, 1, 0))
+
+#high blood pressure or hypertension
+mydatawv5 <- mydatawv5 %>% mutate(hypertension = ifelse(w5_a_hlbp <2, 1, 0))
+
+#household income
+summary(mydatawv5$w5_h_tinc)
+describe(mydatawv5$w5_h_tinc)
+
+mydatawv5$inc<-mydatawv5$w5_h_tinc #*12
+
+
+#############################################################
+
+
+###########################################################
+
+
+mydatawv5$IHSinc<-asinh(mydatawv5$inc)
+mydatawv5$IHSinc<-as.numeric(mydatawv5$IHSinc) #inverse hyperbolic sine transformation
+mydatawv5<-mydatawv5[!is.na(mydatawv5$IHSinc),]
+
+#household size
+mydatawv5$equi_size<-mydatawv5$w5_h_dwlrms
+
+
+#IV
+#IV #self-employed
+mydatawv5 <- mydatawv5 %>% mutate(self_employed = ifelse(w5_a_ems<2, 1, 0))
+table(mydatawv5$self_employed)
+```
+
+
+
+
+
+
+
+```{r message=FALSE, warning=FALSE, comment=NA}
+
+
+var_lab(mydatawv3$equi_size) = "household size"
+var_lab(mydatawv4$equi_size) = "household size"
+var_lab(mydatawv5$equi_size) = "household size"
+#age, gender, race, marital status, children?, wealth quintile, educational level, employment status, place of residence, non-communicable disease, and household size,  government grants, money spent on: health insurance, hospitalization, medical supplies, traditional healers...
+
+
+
+#tot_che_10, tot_che_5, tot_che_15, non_che_40, non_che_55, non_che_25
+
+mydatawv3<- select (mydatawv3, w_hhid, pid, year,coverage,diabetes,hypertension, self_employed, tot_che_10, tot_che_5, tot_che_15, non_che_40, non_che_45, non_che_35, oop,sine_oop, age, care_grant, disabled,child_livingwith,male, african, ever_married,equi_size, IHSinc,  BA_above, employed, west_cape, east_cape, north_cape, free_state, kwazulu, north_west, gauteng, mpumalanga, limpopo) 
+
+mydatawv4<- select (mydatawv4, w_hhid, pid, year,coverage,diabetes,hypertension, self_employed, tot_che_10, tot_che_5, tot_che_15, non_che_40, non_che_45, non_che_35,oop,sine_oop, age, care_grant, disabled,child_livingwith,male, african, ever_married,equi_size, IHSinc,  BA_above, employed, west_cape, east_cape, north_cape, free_state, kwazulu, north_west, gauteng, mpumalanga, limpopo) 
+mydatawv5<- select (mydatawv5,w_hhid, pid, year, diabetes, hypertension, coverage, self_employed, tot_che_10, tot_che_5, tot_che_15, non_che_40, non_che_45, non_che_35, oop,sine_oop, age, care_grant, disabled,child_livingwith,male, african, ever_married,equi_size, IHSinc,  BA_above, employed, west_cape, east_cape, north_cape, free_state, kwazulu, north_west, gauteng, mpumalanga, limpopo) 
+
+
+
+mydata<- bind_rows(mydatawv3, mydatawv4, mydatawv5)
+
+
+mydata[is.na(mydata)] <- 0  #replace all NAs with zero
+sum(is.na(mydata))  #0
+#View(mydata)
+#take away "w" or first digit in the whhid values or digits #helps to do lags
+#CAUSING REOEATED TIME VALUES IN PANEL
+mydata$w_hhid<-sub('.', '', mydata$w_hhid)
+
+
+
+
+```
+##RESULTS
+
+
+
+#TABLE ONE
+DESCRIPTIVE STATISTICS
+
+```{r TABLE ONE DESCRIPTIVE STATISTICS WAVE 3, message=FALSE, warning=FALSE, comment=NA}
+#diabetes, hypertension, coverage, self_employed, che_10, che_40, oop,sine_oop, age, care_grant, disabled,child_livingwith,male, african, ever_married,equi_size, IHSinc,  BA_above, employed, west_cape, east_cape, north_cape, free_state, kwazulu, north_west, gauteng, mpumalanga, limpopo
+
+#PREDISPOSING:
+#Demographic:household member age above 70 years, sex, marital
+#Social structure:education, race, occupation, household size
+
+#ENABLING:
+#Family: income, health insurance subscriptions, type of regular source or whether they receive grants/farm.
+
+#Community: region, urban/rural, price of health services/premium
+
+#ILLNESS LEVEL:
+#Perceived: Disability, chronic disease.
+
+
+#mydatawv3[is.na(mydatawv3)] <- 0  #replace all NAs with zero
+#sum(is.na(mydatawv3)) 
+
+
+#mydatawv4[is.na(mydatawv4)] <- 0  #replace all NAs with zero
+#sum(is.na(mydatawv4)) 
+
+#mydatawv5[is.na(mydatawv5)] <- 0  #replace all NAs with zero
+#sum(is.na(mydatawv5)) 
+
+#tot_che_10, tot_che_5, tot_che_15, non_che_40, non_che_55, non_che_25
+
+#WAVE 3
+#the sensitivity values here #############################################################
+summary(mydatawv3$tot_che_10)
+describe(mydatawv3$tot_che_10) #Observation, Mean, SD, Min, Max
+
+summary(mydatawv3$tot_che_5)
+describe(mydatawv3$tot_che_5)
+
+summary(mydatawv3$tot_che_15)
+describe(mydatawv3$tot_che_15)
+
+summary(mydatawv3$non_che_35)
+describe(mydatawv3$non_che_35)
+
+summary(mydatawv3$non_che_40)
+describe(mydatawv3$non_che_40)
+
+summary(mydatawv3$non_che_45)
+describe(mydatawv3$non_che_45)
+
+#########################
+
+
+
+
+
+summary(mydatawv3$coverage)
+describe(mydatawv3$coverage)
+
+
+summary(mydatawv3$age)
+describe(mydatawv3$age)
+
+summary(mydatawv3$male)
+describe(mydatawv3$male)
+
+summary(mydatawv3$diabetes)
+describe(mydatawv3$diabetes)
+
+summary(mydatawv3$hypertension)
+describe(mydatawv3$hypertension)
+
+
+summary(mydatawv3$self_employed)
+describe(mydatawv3$self_employed)
+
+
+summary(mydatawv3$care_grant)
+describe(mydatawv3$care_grant)
+
+
+summary(mydatawv3$disabled)
+describe(mydatawv3$disabled)
+
+
+summary(mydatawv3$african)
+describe(mydatawv3$african)
+
+
+summary(mydatawv3$ever_married)
+describe(mydatawv3$ever_married)
+
+summary(mydatawv3$equi_size)
+describe(mydatawv3$equi_size)
+
+
+summary(mydatawv3$ever_married)
+describe(mydatawv3$ever_married)
+
+
+#summary(mydatawv3$IHSinc)
+#describe(mydatawv3$IHSinc)
+
+
+summary(mydatawv3$BA_above)
+describe(mydatawv3$BA_above)
+
+
+summary(mydatawv3$employed)
+describe(mydatawv3$employed)
+
+
+summary(mydatawv3$child_livingwith)
+describe(mydatawv3$child_livingwith)
+
+
+summary(mydatawv3$west_cape)
+describe(mydatawv3$west_cape)
+
+summary(mydatawv3$east_cape)
+describe(mydatawv3$east_cape)
+
+summary(mydatawv3$north_cape)
+describe(mydatawv3$north_cape)
+
+summary(mydatawv3$free_state)
+describe(mydatawv3$free_state)
+
+summary(mydatawv3$kwazulu)
+describe(mydatawv3$kwazulu)
+
+summary(mydatawv3$north_west)
+describe(mydatawv3$north_west)
+
+summary(mydatawv3$gauteng)
+describe(mydatawv3$gauteng)
+
+summary(mydatawv3$mpumalanga)
+describe(mydatawv3$mpumalanga)
+
+summary(mydatawv3$limpopo)
+describe(mydatawv3$limpopo)
+
+```
+
+
+```{r TABLE ONE DESCRIPTIVE STATISTICS WAVE 4, message=FALSE, warning=FALSE, comment=NA}
+
+#WAVE 4
+summary(mydatawv4$tot_che_10)
+describe(mydatawv4$tot_che_10) #Observation, Mean, SD, Min, Max
+
+summary(mydatawv4$tot_che_5)
+describe(mydatawv4$tot_che_5)
+
+summary(mydatawv4$tot_che_15)
+describe(mydatawv4$tot_che_15)
+
+summary(mydatawv4$non_che_35)
+describe(mydatawv4$non_che_35)
+
+summary(mydatawv4$non_che_40)
+describe(mydatawv4$non_che_40)
+
+summary(mydatawv4$non_che_45)
+describe(mydatawv4$non_che_45)
+
+
+
+
+
+summary(mydatawv4$coverage)
+describe(mydatawv4$coverage)
+
+
+summary(mydatawv4$age)
+describe(mydatawv4$age)
+
+summary(mydatawv4$male)
+describe(mydatawv4$male)
+
+summary(mydatawv4$diabetes)
+describe(mydatawv4$diabetes)
+
+summary(mydatawv4$hypertension)
+describe(mydatawv4$hypertension)
+
+
+summary(mydatawv4$self_employed)
+describe(mydatawv4$self_employed)
+
+
+summary(mydatawv4$care_grant)
+describe(mydatawv4$care_grant)
+
+
+summary(mydatawv4$disabled)
+describe(mydatawv4$disabled)
+
+
+summary(mydatawv4$african)
+describe(mydatawv4$african)
+
+
+summary(mydatawv4$ever_married)
+describe(mydatawv4$ever_married)
+
+summary(mydatawv4$equi_size)
+describe(mydatawv4$equi_size)
+
+
+summary(mydatawv4$ever_married)
+describe(mydatawv4$ever_married)
+
+
+#summary(mydatawv4$IHSinc)
+#describe(mydatawv4$IHSinc)
+
+
+summary(mydatawv4$BA_above)
+describe(mydatawv4$BA_above)
+
+
+summary(mydatawv4$employed)
+describe(mydatawv4$employed)
+
+
+summary(mydatawv4$child_livingwith)
+describe(mydatawv4$child_livingwith)
+
+
+summary(mydatawv4$west_cape)
+describe(mydatawv4$west_cape)
+
+summary(mydatawv4$east_cape)
+describe(mydatawv4$east_cape)
+
+summary(mydatawv4$north_cape)
+describe(mydatawv4$north_cape)
+
+summary(mydatawv4$free_state)
+describe(mydatawv4$free_state)
+
+summary(mydatawv4$kwazulu)
+describe(mydatawv4$kwazulu)
+
+summary(mydatawv4$north_west)
+describe(mydatawv4$north_west)
+
+summary(mydatawv4$gauteng)
+describe(mydatawv4$gauteng)
+
+summary(mydatawv4$mpumalanga)
+describe(mydatawv4$mpumalanga)
+
+summary(mydatawv4$limpopo)
+describe(mydatawv4$limpopo)
+
+
+```
+
+
+```{r TABLE ONE DESCRIPTIVE STATISTICS WAVE 5, message=FALSE, warning=FALSE, comment=NA}
+#WAVE 5
+
+summary(mydatawv5$tot_che_10)
+describe(mydatawv5$tot_che_10) #Observation, Mean, SD, Min, Max
+
+summary(mydatawv5$tot_che_5)
+describe(mydatawv5$tot_che_5)
+
+summary(mydatawv5$tot_che_15)
+describe(mydatawv5$tot_che_15)
+
+summary(mydatawv5$non_che_35)
+describe(mydatawv5$non_che_35)
+
+summary(mydatawv5$non_che_40)
+describe(mydatawv5$non_che_40)
+
+summary(mydatawv5$non_che_45)
+describe(mydatawv5$non_che_45)
+
+
+
+
+summary(mydatawv5$coverage)
+describe(mydatawv5$coverage)
+
+
+summary(mydatawv5$age)
+describe(mydatawv5$age)
+
+summary(mydatawv5$male)
+describe(mydatawv5$male)
+
+summary(mydatawv5$diabetes)
+describe(mydatawv5$diabetes)
+
+summary(mydatawv5$hypertension)
+describe(mydatawv5$hypertension)
+
+
+summary(mydatawv5$self_employed)
+describe(mydatawv5$self_employed)
+
+
+summary(mydatawv5$care_grant)
+describe(mydatawv5$care_grant)
+
+
+summary(mydatawv5$disabled)
+describe(mydatawv5$disabled)
+
+
+summary(mydatawv5$african)
+describe(mydatawv5$african)
+
+
+summary(mydatawv5$ever_married)
+describe(mydatawv5$ever_married)
+
+summary(mydatawv5$equi_size)
+describe(mydatawv5$equi_size)
+
+
+summary(mydatawv5$ever_married)
+describe(mydatawv5$ever_married)
+
+
+#summary(mydatawv5$IHSinc)
+#describe(mydatawv5$IHSinc)
+
+
+summary(mydatawv5$BA_above)
+describe(mydatawv5$BA_above)
+
+
+summary(mydatawv5$employed)
+describe(mydatawv5$employed)
+
+
+summary(mydatawv5$child_livingwith)
+describe(mydatawv5$child_livingwith)
+
+
+summary(mydatawv5$west_cape)
+describe(mydatawv5$west_cape)
+
+summary(mydatawv5$east_cape)
+describe(mydatawv5$east_cape)
+
+summary(mydatawv5$north_cape)
+describe(mydatawv5$north_cape)
+
+summary(mydatawv5$free_state)
+describe(mydatawv5$free_state)
+
+summary(mydatawv5$kwazulu)
+describe(mydatawv5$kwazulu)
+
+summary(mydatawv5$north_west)
+describe(mydatawv5$north_west)
+
+summary(mydatawv5$gauteng)
+describe(mydatawv5$gauteng)
+
+summary(mydatawv5$mpumalanga)
+describe(mydatawv5$mpumalanga)
+
+summary(mydatawv5$limpopo)
+describe(mydatawv5$limpopo)
+
+```
+
+
+
+
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+
+
+---
+title: "Regression Discontinuity Design"
+output: html_document
+Sources: 
+- https://evalf20.classes.andrewheiss.com/example/rdd/
+- https://www.econometrics-with-r.org/
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, eval = TRUE)
+rm(list = ls())     # clear memory (removes all the variables from the workspace)
+options(scipen=999) # disable scientific notation
+```
+
+```{r}
+#install.packages("rddtools")
+library(rddtools)
+library(dplyr)
+library(ggplot2)
+library(magrittr)
+data(house)
+#
+
+```
+
+```{r}
+#Sharp RDD
+#Using rddtools package
+house_rdd <- rdd_data(y=house$y, x=house$x, cutpoint=0)
+str(house_rdd)
+summary(house_rdd)
+plot(house_rdd)
+
+## Specify manually the bandwidth:
+plot(house_rdd, h=0.2)
+## Show three plots with different bandwidth:
+plot(house_rdd, h=c(0.2,0.3,0.4), nplot=3)
+## Specify instead of the bandwidth, the final number of bins:
+plot(house_rdd, nbins=22)
+
+## estimate the sharp RDD model
+rdd_mod <- rdd_reg_lm(rdd_object = house_rdd, 
+                      slope = "same")
+summary(rdd_mod)
+plot(rdd_mod)
+
+#non-parametric estimation
+bw_ik <- rdd_bw_ik(house_rdd)
+reg_nonpara <- rdd_reg_np(rdd_object=house_rdd, bw=bw_ik)
+print(reg_nonpara)
+```
+
+```{r}
+#Another way of running RDD/give same results
+house$z <- ifelse(house$x < 0, 0, 1)
+model_sharp <- lm(y ~ x + z,
+                   data = house)
+summary(model_sharp) 
+```
+
+```{r}
+#RDD: checking the robustness
+# check sensitivity to different bandwidths
+plotSensi(reg_nonpara, from=0.05, to=1, by=0.1)
+
+#placebo test
+plotPlacebo(reg_nonpara)
+
+#McCrary test
+dens_test(reg_nonpara)
+
+#covariate balance tests
+set.seed(123)
+n_Lee <- nrow(house)
+Z <- data.frame(z1 = rnorm(n_Lee, sd=2), 
+                z2 = rnorm(n_Lee, mean = ifelse(house<0, 5, 8)), 
+                z3 = sample(letters, size = n_Lee, replace = TRUE))
+house_rdd_Z <- rdd_data(y = house$y, x = house$x, covar = Z, cutpoint = 0)
+
+covarTest_mean(house_rdd_Z) 
+
+```
+
+```{r}
+####Fuzzy RDD
+#data can be found at: https://evalf20.classes.andrewheiss.com/example/rdd-fuzzy/
+
+tutoring <- read.csv("C:/Users/erico/Desktop/ACADEMICS/MY UofT COURSES/YEAR TWO/SEMESTER ONE/HAD5744H Applied Health Econometrics I/Lecture14 regression discontinuity.. I added this/tutoring_program_fuzzy.csv")
+
+View(tutoring)
+
+#graph the data
+library(tidyverse)
+ggplot(tutoring, aes(x = entrance_exam, y = tutoring_text, color = entrance_exam <= 70)) +
+  geom_point(size = 1.5, alpha = 0.5, 
+             position = position_jitter(width = 0, height = 0.25, seed = 123)) + 
+  geom_vline(xintercept = 70) + 
+  labs(x = "Entrance exam score", y = "Participated in tutoring program") + guides(color = FALSE)
+
+#center the entrance score variable and create instrument variable "below_cutoff"
+tutoring_centered <- tutoring %>% 
+  mutate(entrance_centered = entrance_exam - 70,
+         below_cutoff = entrance_exam <= 70)
+
+#generate predicted probability of receiving tutoring 
+mylogit <- glm(tutoring ~ entrance_centered + below_cutoff, data = tutoring_centered, family = "binomial")
+tutoring_centered$p <- predict(mylogit, newdata = tutoring_centered, type = "response")
+
+#Estimate fuzzy RDD
+data <- rdd_data(tutoring_centered$exit_exam, tutoring_centered$entrance_centered, 
+                 cutpoint = 0, 
+                 z = tutoring_centered$p)
+
+summary(data)
+
+frdd_mod <- rdd_reg_lm(rdd_object = data, 
+                       slope = "same")
+frdd_mod
+
+###use a bandwidth of 10
+tutoring_centered_10 = filter(tutoring_centered,
+                                          entrance_centered >= -10 & 
+                                            entrance_centered <= 10)
+
+#generate predicted probability of receiving tutoring 
+mylogit2 <- glm(tutoring ~ entrance_centered + below_cutoff, data = tutoring_centered_10, family = "binomial")
+tutoring_centered_10$p2 <- predict(mylogit2, newdata = tutoring_centered_10, type = "response")
+
+#Estimate fuzzy RDD
+data2 <- rdd_data(tutoring_centered_10$exit_exam, tutoring_centered_10$entrance_centered, 
+                 cutpoint = 0, 
+                 z = tutoring_centered_10$p2)
+
+summary(data2)
+frdd_mod2 <- rdd_reg_lm(rdd_object = data2, 
+                       slope = "same")
+frdd_mod2
+
+```
+
+
+```{r}
+##another way of running fuzzy RDD/give same point estimate
+library(estimatr)  # Run 2SLS models in one step with iv_robust()
+
+
+model_fuzzy <- iv_robust(
+  exit_exam ~ entrance_centered + tutoring | entrance_centered + below_cutoff,
+  data =  tutoring_centered)
+model_fuzzy
+
+###use a bandwidth of 10
+model_fuzzy2 <- iv_robust(
+  exit_exam ~ entrance_centered + tutoring | entrance_centered + below_cutoff,
+  data = filter(tutoring_centered, entrance_centered >= -10 & entrance_centered <= 10)
+)
+model_fuzzy2
+
+#Fuzzy nonparametric estimation
+library(rdrobust)
+rdrobust(y = tutoring$exit_exam, x = tutoring$entrance_exam, 
+         c = 70, fuzzy = tutoring$tutoring) %>% 
+  summary()
+```
+
+
+
+
+
