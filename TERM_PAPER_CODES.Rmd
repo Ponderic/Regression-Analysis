@@ -139,10 +139,6 @@ View(df_12$year)
 
 
 ########################
-
-
-
-
 ####################   WAVE 4 MERGING (collected 2014-2015)
 #######
 
@@ -189,11 +185,6 @@ View(df_15$year)
 
 
 #########   WAVE 5 MERGING  (collected 2017)
-
-
-
-
-
 ######
 
 
@@ -260,7 +251,7 @@ View(df_17$year)
 ##oop
 #colnames(mydatawv4) #to find all column names
 #mydatawv4_new<- select (mydatawv4, w4_h_nfmedaidspn, w4_h_nfdocspn,w4_h_nfhspspn,w4_h_nfmedspn,w4_h_nftradspn,w4_h_nfhomspn)
-mydatawv3$oop <- rowSums(mydatawv3[, c("w3_h_nfmedaidspn", "w3_h_nfdocspn","w3_h_nfhspspn","w3_h_nfmedspn","w3_h_nftradspn","w3_h_nfhomspn")],na.rm=T)
+df_12$oop <- rowSums(df_12[, c("w3_h_nfmedaidspn", "w3_h_nfdocspn","w3_h_nfhspspn","w3_h_nfmedspn","w3_h_nftradspn","w3_h_nfhomspn")],na.rm=T)
 #create a new column variable for OOP   
 #mydatawv4$oop<-((mydatawv4$oop)*12) #for the year
 
@@ -268,11 +259,11 @@ mydatawv3$oop <- rowSums(mydatawv3[, c("w3_h_nfmedaidspn", "w3_h_nfdocspn","w3_h
 ###################
 #descriptives
 
-summary(mydatawv3$oop)
-describe(mydatawv3$oop)
+summary(df_12$oop)
+describe(df_12$oop)
 
 
-mydatawv3$sine_oop<-asinh(mydatawv3$oop) #clean OOP and use sine_oop as Dependent var
+df_12$sine_oop<-asinh(mydatawv3$oop) #clean OOP and use sine_oop as Dependent var
 
 
 
@@ -293,18 +284,18 @@ mydatawv3$sine_oop<-asinh(mydatawv3$oop) #clean OOP and use sine_oop as Dependen
 ##oop
 #colnames(mydatawv4) #to find all column names
 #mydatawv4_new<- select (mydatawv4, w4_h_nfmedaidspn, w4_h_nfdocspn,w4_h_nfhspspn,w4_h_nfmedspn,w4_h_nftradspn,w4_h_nfhomspn)
-mydatawv4$oop <- rowSums(mydatawv4[, c("w4_h_nfmedaidspn", "w4_h_nfdocspn","w4_h_nfhspspn","w4_h_nfmedspn","w4_h_nftradspn","w4_h_nfhomspn")],na.rm=T)
+df_15$oop <- rowSums(df_15[, c("w4_h_nfmedaidspn", "w4_h_nfdocspn","w4_h_nfhspspn","w4_h_nfmedspn","w4_h_nftradspn","w4_h_nfhomspn")],na.rm=T)
 #create a new column variable for OOP   
 #mydatawv4$oop<-((mydatawv4$oop)*12) #for the year
 
 #descriptives
 
-summary(mydatawv4$oop)
-describe(mydatawv4$oop)
+summary(df_15$oop)
+describe(df_15$oop)
 
 
 
-mydatawv4$sine_oop<-asinh(mydatawv4$oop) #clean OOP and use sine_oop as Dependent var
+df_15$sine_oop<-asinh(df_15$oop) #clean OOP and use sine_oop as Dependent var
 
 
 ```
@@ -319,18 +310,18 @@ mydatawv4$sine_oop<-asinh(mydatawv4$oop) #clean OOP and use sine_oop as Dependen
 ##oop
 #colnames(mydatawv4) #to find all column names
 #mydatawv4_new<- select (mydatawv4, w4_h_nfmedaidspn, w4_h_nfdocspn,w4_h_nfhspspn,w4_h_nfmedspn,w4_h_nftradspn,w4_h_nfhomspn)
-mydatawv5$oop <- rowSums(mydatawv5[, c("w5_h_nfmedaidspn", "w5_h_nfdocspn","w5_h_nfhspspn","w5_h_nfmedspn","w5_h_nftradspn","w5_h_nfhomspn")],na.rm=T)
+df_17$oop <- rowSums(df_17[, c("w5_h_nfmedaidspn", "w5_h_nfdocspn","w5_h_nfhspspn","w5_h_nfmedspn","w5_h_nftradspn","w5_h_nfhomspn")],na.rm=T)
 #create a new column variable for OOP   
 #mydatawv4$oop<-((mydatawv4$oop)*12) #for the year
 
 
 #Descriptives
 
-summary(mydatawv5$oop)
-describe(mydatawv5$oop)
+summary(df_17$oop)
+describe(df_17$oop)
 
 
-mydatawv5$sine_oop<-asinh(mydatawv5$oop) #clean OOP and use sine_oop as Dependent var
+df_17$sine_oop<-asinh(df_17$oop) #clean OOP and use sine_oop as Dependent var
 
 
 ```
@@ -341,20 +332,7 @@ mydatawv5$sine_oop<-asinh(mydatawv5$oop) #clean OOP and use sine_oop as Dependen
 ```{r Independent variables, message=FALSE, warning=FALSE, comment=NA}
 
 #########################################################
-
-##################
-summary(mydatawv3$oop)
-describe(mydatawv3$oop)
-
-
-############
-
-
-
- 
 ##########################################################################
-
-
 #########################################################
 
 
@@ -373,8 +351,8 @@ describe(mydatawv3$oop)
 
 #main ind var
 #insurance coverage 
-mydatawv3 <- mydatawv3 %>% mutate(coverage = ifelse(w3_h_nfmedaid<2, 1, 0))
-table(mydatawv3$coverage)
+df_12 <- df_12 %>% mutate(coverage = ifelse(w3_h_nfmedaid<2, 1, 0))
+table(df_12$coverage)
 
 #premium
 #mydatawv4$premium<- mydatawv4$w4_h_nfmedaidspn
@@ -382,84 +360,84 @@ table(mydatawv3$coverage)
 
 
 #age >=70 years...2014-70
-mydatawv3 <- mydatawv3 %>% mutate(age = ifelse(w3_a_dob_y>=1942, 1, 0))
-count(mydatawv3, age)
-table(mydatawv3$age)
+df_12 <- df_12 %>% mutate(age = ifelse(w3_a_dob_y>=1942, 1, 0))
+count(df_12, age)
+table(df_12$age)
 #gender
-count(mydatawv3, w3_a_gen)
-table(mydatawv3$w3_a_gen)
-mydatawv3$male<-ifelse(mydatawv3$w3_a_gen<2,1,0)
+count(df_12, w3_a_gen)
+table(df_12$w3_a_gen)
+df_12$male<-ifelse(df_12$w3_a_gen<2,1,0)
 #race
-count(mydatawv3, w3_a_popgrp)
-table(mydatawv3$w3_a_popgrp)
-mydatawv3$african<-ifelse(mydatawv3$w3_a_popgrp<2,1,0)
+count(df_12, w3_a_popgrp)
+table(df_12$w3_a_popgrp)
+df_12$african<-ifelse(df_12$w3_a_popgrp<2,1,0)
 #ever married or never married
-count(mydatawv3, w3_a_marstt)
-table(mydatawv3$w3_a_marstt)
-mydatawv3$ever_married<-ifelse(mydatawv3$w3_a_marstt<5,1,0)
+count(df_12, w3_a_marstt)
+table(df_12$w3_a_marstt)
+df_12$ever_married<-ifelse(df_12$w3_a_marstt<5,1,0)
 #province
-count(mydatawv3, w3_a_brnprov)
-table(mydatawv3$w3_a_brnprov)
-mydatawv3$west_cape<-ifelse(mydatawv3$w3_a_brnprov==1,1,0)
-mydatawv3$east_cape<-ifelse(mydatawv3$w3_a_brnprov==2,1,0)
-mydatawv3$north_cape<-ifelse(mydatawv3$w3_a_brnprov==3,1,0)
-mydatawv3$free_state<-ifelse(mydatawv3$w3_a_brnprov==4,1,0)
-mydatawv3$kwazulu<-ifelse(mydatawv3$w3_a_brnprov==5,1,0)
-mydatawv3$north_west<-ifelse(mydatawv3$w3_a_brnprov==6,1,0)
-mydatawv3$gauteng<-ifelse(mydatawv3$w3_a_brnprov==7,1,0)
-mydatawv3$mpumalanga<-ifelse(mydatawv3$w3_a_brnprov==8,1,0)
-mydatawv3$limpopo<-ifelse(mydatawv3$w3_a_brnprov==9,1,0)
+count(df_12, w3_a_brnprov)
+table(df_12$w3_a_brnprov)
+df_12$west_cape<-ifelse(df_12$w3_a_brnprov==1,1,0)
+df_12$east_cape<-ifelse(df_12$w3_a_brnprov==2,1,0)
+df_12$north_cape<-ifelse(df_12$w3_a_brnprov==3,1,0)
+df_12$free_state<-ifelse(df_12$w3_a_brnprov==4,1,0)
+df_12$kwazulu<-ifelse(df_12$w3_a_brnprov==5,1,0)
+df_12$north_west<-ifelse(df_12$w3_a_brnprov==6,1,0)
+df_12$gauteng<-ifelse(df_12$w3_a_brnprov==7,1,0)
+df_12$mpumalanga<-ifelse(df_12$w3_a_brnprov==8,1,0)
+df_12$limpopo<-ifelse(df_12$w3_a_brnprov==9,1,0)
  
 #number of children living with respondent #IV
-count(mydatawv3, w3_a_bhlive_n)
-table(mydatawv3$w3_a_bhlive_n)
-mydatawv3$child_livingwith<-as.numeric(mydatawv3$w3_a_bhlive_n)
-mydatawv3$child_livingwith <- replace(mydatawv3$child_livingwith, mydatawv3$child_livingwith < 0, 0)
+count(df_12, w3_a_bhlive_n)
+table(df_12$w3_a_bhlive_n)
+df_12$child_livingwith<-as.numeric(df_12$w3_a_bhlive_n)
+df_12$child_livingwith <- replace(df_12$child_livingwith, df_12$child_livingwith < 0, 0)
 #educational level
-count(mydatawv3, w3_a_edterlev)
-table(mydatawv3$w3_a_edterlev)
-mydatawv3$BA_above<-ifelse(mydatawv3$w3_a_edterlev>=20,1,0)
-table(mydatawv3$BA_above)
+count(df_12, w3_a_edterlev)
+table(df_12$w3_a_edterlev)
+df_12$BA_above<-ifelse(df_12$w3_a_edterlev>=20,1,0)
+table(df_12$BA_above)
 #employed
-count(mydatawv3, w3_a_em1)
-table(mydatawv3$w3_a_em1)
-mydatawv3$employed<-ifelse(mydatawv3$w3_a_em1<2,1,0)
+count(df_12, w3_a_em1)
+table(df_12$w3_a_em1)
+df_12$employed<-ifelse(df_12$w3_a_em1<2,1,0)
 #care dependency grant
-mydatawv3 <- mydatawv3 %>% mutate(care_grant = ifelse(w3_a_inccare<2, 1, 0))
-table(mydatawv3$care_grant)
+df_12 <- df_12 %>% mutate(care_grant = ifelse(w3_a_inccare<2, 1, 0))
+table(df_12$care_grant)
 #ILLness
 #disabled
-mydatawv3 <- mydatawv3 %>% mutate(disabled = ifelse(w3_a_hlser<2, 1, 0))
-table(mydatawv3$disabled)
+df_12 <- df_12 %>% mutate(disabled = ifelse(w3_a_hlser<2, 1, 0))
+table(df_12$disabled)
 
 #diabetes
-mydatawv3 <- mydatawv3 %>% mutate(diabetes = ifelse(w3_a_hldia<2, 1, 0))
+df_12 <- df_12 %>% mutate(diabetes = ifelse(w3_a_hldia<2, 1, 0))
 
 #high blood pressure or hypertension
-mydatawv3 <- mydatawv3 %>% mutate(hypertension = ifelse(w3_a_hlbp <2, 1, 0))
+df_12 <- df_12 %>% mutate(hypertension = ifelse(w3_a_hlbp <2, 1, 0))
 
 
 #income household
-summary(mydatawv3$w3_h_tinc)
-describe(mydatawv3$w3_h_tinc)
+summary(df_12$w3_h_tinc)
+describe(df_12$w3_h_tinc)
 
-mydatawv3$inc<-mydatawv3$w3_h_tinc #*12
+df_12$inc<-df_12$w3_h_tinc #*12
 
 ###############################################################
-summary(mydatawv3$inc)
-describe(mydatawv3$inc)
+summary(df_12$inc)
+describe(df_12$inc)
 
 #################################################################
-mydatawv3$IHSinc<-asinh(mydatawv3$inc)
-mydatawv3$IHSinc<-as.numeric(mydatawv3$IHSinc) #inverse hyperbolic sine transformation
-mydatawv3<-mydatawv3[!is.na(mydatawv3$IHSinc),]
+df_12$IHSinc<-asinh(df_12$inc)
+df_12$IHSinc<-as.numeric(df_12$IHSinc) #inverse hyperbolic sine transformation
+df_12<-df_12[!is.na(df_12$IHSinc),]
 
 #household size
-mydatawv3$equi_size<-mydatawv3$w3_h_dwlrms
+df_12$equi_size<-df_12$w3_h_dwlrms
  
 #IV #self-employed
-mydatawv3 <- mydatawv3 %>% mutate(self_employed = ifelse(w3_a_ems<2, 1, 0))
-table(mydatawv3$self_employed)
+df_12 <- df_12 %>% mutate(self_employed = ifelse(w3_a_ems<2, 1, 0))
+table(df_12$self_employed)
  
  
 
@@ -491,19 +469,8 @@ table(mydatawv3$self_employed)
 #disability
 
 ##################
-summary(mydatawv4$oop)
-describe(mydatawv4$oop)
-
-
-summary(mydatawv4$non_food_exp)
-describe(mydatawv4$non_food_exp)
-
-summary(mydatawv4$total_exp)
-describe(mydatawv4$total_exp)
-
-
-summary(mydatawv4$food_exp)
-describe(mydatawv4$food_exp)
+summary(df_15$oop)
+describe(df_15$oop)
 
 
 
@@ -513,8 +480,8 @@ describe(mydatawv4$food_exp)
 
 #main ind var
 #insurance coverage 
-mydatawv4 <- mydatawv4 %>% mutate(coverage = ifelse(w4_h_nfmedaid<2, 1, 0))
-table(mydatawv4$coverage)
+df_15 <- df_15 %>% mutate(coverage = ifelse(w4_h_nfmedaid<2, 1, 0))
+table(df_15$coverage)
 
 #premium
 #mydatawv4$premium<- mydatawv4$w4_h_nfmedaidspn
@@ -522,67 +489,67 @@ table(mydatawv4$coverage)
 
 
 #age >=70 years...2014-70
-mydatawv4 <- mydatawv4 %>% mutate(age = ifelse(w4_a_dob_y>=1944, 1, 0))
-count(mydatawv4, age)
-table(mydatawv4$age)
+df_15 <- df_15 %>% mutate(age = ifelse(w4_a_dob_y>=1944, 1, 0))
+count(df_15, age)
+table(df_15$age)
 #gender
-count(mydatawv4, w4_a_gen)
-table(mydatawv4$w4_a_gen)
-mydatawv4$male<-ifelse(mydatawv4$w4_a_gen<2,1,0)
+count(df_15, w4_a_gen)
+table(df_15$w4_a_gen)
+df_15$male<-ifelse(df_15$w4_a_gen<2,1,0)
 #race
-count(mydatawv4, w4_a_popgrp)
-table(mydatawv4$w4_a_popgrp)
-mydatawv4$african<-ifelse(mydatawv4$w4_a_popgrp<2,1,0)
+count(df_15, w4_a_popgrp)
+table(df_15$w4_a_popgrp)
+df_15$african<-ifelse(df_15$w4_a_popgrp<2,1,0)
 #ever married or never married
-count(mydatawv4, w4_a_evmar)
-table(mydatawv4$w4_a_evmar)
-mydatawv4$ever_married<-ifelse(mydatawv4$w4_a_evmar==1,1,0)
-table(mydatawv4$ever_married)
+count(df_15, w4_a_evmar)
+table(df_15$w4_a_evmar)
+df_15$ever_married<-ifelse(df_15$w4_a_evmar==1,1,0)
+table(df_15$ever_married)
 #province
-count(mydatawv4, w4_a_brnprov)
-table(mydatawv4$w4_a_brnprov)
-mydatawv4$west_cape<-ifelse(mydatawv4$w4_a_brnprov==1,1,0)
-mydatawv4$east_cape<-ifelse(mydatawv4$w4_a_brnprov==2,1,0)
-mydatawv4$north_cape<-ifelse(mydatawv4$w4_a_brnprov==3,1,0)
-mydatawv4$free_state<-ifelse(mydatawv4$w4_a_brnprov==4,1,0)
-mydatawv4$kwazulu<-ifelse(mydatawv4$w4_a_brnprov==5,1,0)
-mydatawv4$north_west<-ifelse(mydatawv4$w4_a_brnprov==6,1,0)
-mydatawv4$gauteng<-ifelse(mydatawv4$w4_a_brnprov==7,1,0)
-mydatawv4$mpumalanga<-ifelse(mydatawv4$w4_a_brnprov==8,1,0)
-mydatawv4$limpopo<-ifelse(mydatawv4$w4_a_brnprov==9,1,0)
+count(df_15, w4_a_brnprov)
+table(df_15$w4_a_brnprov)
+df_15$west_cape<-ifelse(df_15$w4_a_brnprov==1,1,0)
+df_15$east_cape<-ifelse(df_15$w4_a_brnprov==2,1,0)
+df_15$north_cape<-ifelse(df_15$w4_a_brnprov==3,1,0)
+df_15$free_state<-ifelse(df_15$w4_a_brnprov==4,1,0)
+df_15$kwazulu<-ifelse(df_15$w4_a_brnprov==5,1,0)
+df_15$north_west<-ifelse(df_15$w4_a_brnprov==6,1,0)
+df_15$gauteng<-ifelse(df_15$w4_a_brnprov==7,1,0)
+df_15$mpumalanga<-ifelse(df_15$w4_a_brnprov==8,1,0)
+df_15$limpopo<-ifelse(df_15$w4_a_brnprov==9,1,0)
  
 #number of children living with respondent #IV
-count(mydatawv4, w4_a_bhlive_n)
-table(mydatawv4$w4_a_bhlive_n)
-mydatawv4$child_livingwith<-as.numeric(mydatawv4$w4_a_bhlive_n)
-mydatawv4$child_livingwith <- replace(mydatawv4$child_livingwith, mydatawv4$child_livingwith < 0, 0)
+count(df_15, w4_a_bhlive_n)
+table(df_15$w4_a_bhlive_n)
+df_15$child_livingwith<-as.numeric(df_15$w4_a_bhlive_n)
+df_15$child_livingwith <- replace(df_15$child_livingwith, df_15$child_livingwith < 0, 0)
 #educational level
-count(mydatawv4, w4_a_edterlev)
-table(mydatawv4$w4_a_edterlev)
-mydatawv4$BA_above<-ifelse(mydatawv4$w4_a_edterlev>=20,1,0)
-table(mydatawv4$BA_above)
+count(df_15, w4_a_edterlev)
+table(df_15$w4_a_edterlev)
+df_15$BA_above<-ifelse(df_15$w4_a_edterlev>=20,1,0)
+table(df_15$BA_above)
 #employed
-count(mydatawv4, w4_a_em1)
-table(mydatawv4$w4_a_em1)
-mydatawv4$employed<-ifelse(mydatawv4$w4_a_em1<2,1,0)
+count(df_15, w4_a_em1)
+table(df_15$w4_a_em1)
+df_15$employed<-ifelse(df_15$w4_a_em1<2,1,0)
 #care dependency grant
-mydatawv4 <- mydatawv4 %>% mutate(care_grant = ifelse(w4_a_inccare<2, 1, 0))
-table(mydatawv4$care_grant)
+df_15 <- df_15 %>% mutate(care_grant = ifelse(w4_a_inccare<2, 1, 0))
+table(df_15$care_grant)
 #ILLness
 #disabled
-mydatawv4 <- mydatawv4 %>% mutate(disabled = ifelse(w4_a_hlser<2, 1, 0))
-table(mydatawv4$disabled)
+df_15 <- df_15 %>% mutate(disabled = ifelse(w4_a_hlser<2, 1, 0))
+table(df_15$disabled)
 
 #diabetes
-mydatawv4 <- mydatawv4 %>% mutate(diabetes = ifelse(w4_a_hldia<2, 1, 0))
+df_15 <- df_15 %>% mutate(diabetes = ifelse(w4_a_hldia<2, 1, 0))
 
 #high blood pressure or hypertension
-mydatawv4 <- mydatawv4 %>% mutate(hypertension = ifelse(w4_a_hlbp <2, 1, 0))
+df_15 <- df_15 %>% mutate(hypertension = ifelse(w4_a_hlbp <2, 1, 0))
 
 #income household
-summary(mydatawv4$w4_h_tinc)
-describe(mydatawv4$w4_h_tinc)
-mydatawv4$inc<-mydatawv4$w4_h_tinc #*12
+summary(df_15$w4_h_tinc)
+describe(df_15$w4_h_tinc)
+df_15$inc<-df_15$w4_h_tinc #*12
 
 
 ###############################################################
@@ -590,16 +557,21 @@ mydatawv4$inc<-mydatawv4$w4_h_tinc #*12
 
 #################################################################
 
-mydatawv4$IHSinc<-asinh(mydatawv4$inc)
-mydatawv4$IHSinc<-as.numeric(mydatawv4$IHSinc) #inverse hyperbolic sine transformation
-mydatawv4<-mydatawv4[!is.na(mydatawv4$IHSinc),]
+df_15$IHSinc<-asinh(df_15$inc)
+df_15$IHSinc<-as.numeric(df_15$IHSinc) #inverse hyperbolic sine transformation
+df_15<-df_15[!is.na(df_15$IHSinc),]
 
 #household size
-mydatawv4$equi_size<-mydatawv4$w4_h_dwlrms
+df_15$equi_size<-df_15$w4_h_dwlrms
  
 #IV #self-employed
-mydatawv4 <- mydatawv4 %>% mutate(self_employed = ifelse(w4_a_ems<2, 1, 0))
-table(mydatawv4$self_employed)
+df_15 <- df_15 %>% mutate(self_employed = ifelse(w4_a_ems<2, 1, 0))
+table(df_15$self_employed)
+
+
+
+
+
  
 ##########################################################################
 #wave 5
@@ -613,27 +585,16 @@ table(mydatawv4$self_employed)
 
 
 ##################
-summary(mydatawv5$oop)
-describe(mydatawv5$oop)
-
-
-summary(mydatawv5$non_food_exp)
-describe(mydatawv5$non_food_exp)
-
-summary(mydatawv5$total_exp)
-describe(mydatawv5$total_exp)
-
-
-summary(mydatawv5$food_exp)
-describe(mydatawv5$food_exp)
+summary(df_17$oop)
+describe(df_17$oop)
 
 
 
 ###################
 
 #insurance premium 
-mydatawv5 <- mydatawv5 %>% mutate(coverage = ifelse(w5_h_nfmedaid<2, 1, 0))
-table(mydatawv5$coverage)
+df_17 <- df_17 %>% mutate(coverage = ifelse(w5_h_nfmedaid<2, 1, 0))
+table(df_17$coverage)
 
 #premium
 #mydatawv5$premium<- mydatawv5$w5_h_nfmedaidspn
@@ -641,67 +602,67 @@ table(mydatawv5$coverage)
 
 
 #age >=70 years...2016-70
-mydatawv5 <- mydatawv5 %>% mutate(age = ifelse(w5_a_dob_y>=1946, 1, 0))
-count(mydatawv5, age)
-table(mydatawv5$age)
+df_17 <- df_17 %>% mutate(age = ifelse(w5_a_dob_y>=1946, 1, 0))
+count(df_17, age)
+table(df_17$age)
 #gender
-count(mydatawv5, w5_a_gen)
-table(mydatawv5$w5_a_gen)
-mydatawv5$male<-ifelse(mydatawv5$w5_a_gen<2,1,0)
+count(df_17, w5_a_gen)
+table(df_17$w5_a_gen)
+df_17$male<-ifelse(df_17$w5_a_gen<2,1,0)
 #race
-count(mydatawv5, w5_a_popgrp)
-table(mydatawv5$w5_a_popgrp)
-mydatawv5$african<-ifelse(mydatawv5$w5_a_popgrp<2,1,0)
+count(df_17, w5_a_popgrp)
+table(df_17$w5_a_popgrp)
+df_17$african<-ifelse(df_17$w5_a_popgrp<2,1,0)
 #ever married or never married
-count(mydatawv5, w5_a_evmar)
-table(mydatawv5$w5_a_evmar)
-mydatawv5$ever_married<-ifelse(mydatawv5$w5_a_evmar<2,1,0)
+count(df_17, w5_a_evmar)
+table(df_17$w5_a_evmar)
+df_17$ever_married<-ifelse(df_17$w5_a_evmar<2,1,0)
 #province
-count(mydatawv5, w5_a_brnprov)
-table(mydatawv5$w5_a_brnprov)
-mydatawv5$west_cape<-ifelse(mydatawv5$w5_a_brnprov==1,1,0)
-mydatawv5$east_cape<-ifelse(mydatawv5$w5_a_brnprov==2,1,0)
-mydatawv5$north_cape<-ifelse(mydatawv5$w5_a_brnprov==3,1,0)
-mydatawv5$free_state<-ifelse(mydatawv5$w5_a_brnprov==4,1,0)
-mydatawv5$kwazulu<-ifelse(mydatawv5$w5_a_brnprov==5,1,0)
-mydatawv5$north_west<-ifelse(mydatawv5$w5_a_brnprov==6,1,0)
-mydatawv5$gauteng<-ifelse(mydatawv5$w5_a_brnprov==7,1,0)
-mydatawv5$mpumalanga<-ifelse(mydatawv5$w5_a_brnprov==8,1,0)
-mydatawv5$limpopo<-ifelse(mydatawv5$w5_a_brnprov==9,1,0)
+count(df_17, w5_a_brnprov)
+table(df_17$w5_a_brnprov)
+df_17$west_cape<-ifelse(df_17$w5_a_brnprov==1,1,0)
+df_17$east_cape<-ifelse(df_17$w5_a_brnprov==2,1,0)
+df_17$north_cape<-ifelse(df_17$w5_a_brnprov==3,1,0)
+df_17$free_state<-ifelse(df_17$w5_a_brnprov==4,1,0)
+df_17$kwazulu<-ifelse(df_17$w5_a_brnprov==5,1,0)
+df_17$north_west<-ifelse(df_17$w5_a_brnprov==6,1,0)
+df_17$gauteng<-ifelse(df_17$w5_a_brnprov==7,1,0)
+df_17$mpumalanga<-ifelse(df_17$w5_a_brnprov==8,1,0)
+df_17$limpopo<-ifelse(df_17$w5_a_brnprov==9,1,0)
  
 #number of children living with respondent
-count(mydatawv5, w5_a_bhlive_n)
-table(mydatawv5$w5_a_bhlive_n)
-mydatawv5$child_livingwith<-as.numeric(mydatawv5$w5_a_bhlive_n)
-mydatawv5$child_livingwith <- replace(mydatawv5$child_livingwith, mydatawv5$child_livingwith < 0, 0)
+count(df_17, w5_a_bhlive_n)
+table(df_17$w5_a_bhlive_n)
+df_17$child_livingwith<-as.numeric(df_17$w5_a_bhlive_n)
+df_17$child_livingwith <- replace(df_17$child_livingwith, df_17$child_livingwith < 0, 0)
 #educational level
-count(mydatawv5, w5_a_edterlev)
-table(mydatawv5$w5_a_edterlev)
-mydatawv5$BA_above<-ifelse(mydatawv5$w5_a_edterlev>=20,1,0)
-table(mydatawv5$BA_above)
+count(df_17, w5_a_edterlev)
+table(df_17$w5_a_edterlev)
+df_17$BA_above<-ifelse(df_17$w5_a_edterlev>=20,1,0)
+table(df_17$BA_above)
 #employed
-count(mydatawv5, w5_a_em1)
-table(mydatawv5$w5_a_em1)
-mydatawv5$employed<-ifelse(mydatawv5$w5_a_em1<2,1,0)
+count(df_17, w5_a_em1)
+table(df_17$w5_a_em1)
+df_17$employed<-ifelse(df_17$w5_a_em1<2,1,0)
 #care dependency grant
-mydatawv5 <- mydatawv5 %>% mutate(care_grant = ifelse(w5_a_inccare<2, 1, 0))
-table(mydatawv5$care_grant)
+df_17 <- df_17 %>% mutate(care_grant = ifelse(w5_a_inccare<2, 1, 0))
+table(df_17$care_grant)
 #ILLness
 #disabled
-mydatawv5 <- mydatawv5 %>% mutate(disabled = ifelse(w5_a_hlser<2, 1, 0))
-table(mydatawv5$disabled)
+df_17 <- df_17 %>% mutate(disabled = ifelse(w5_a_hlser<2, 1, 0))
+table(df_17$disabled)
 
 #diabetes
-mydatawv5 <- mydatawv5 %>% mutate(diabetes = ifelse(w5_a_hldia<2, 1, 0))
+df_17 <- df_17 %>% mutate(diabetes = ifelse(w5_a_hldia<2, 1, 0))
 
 #high blood pressure or hypertension
-mydatawv5 <- mydatawv5 %>% mutate(hypertension = ifelse(w5_a_hlbp <2, 1, 0))
+df_17 <- df_17 %>% mutate(hypertension = ifelse(w5_a_hlbp <2, 1, 0))
 
 #household income
-summary(mydatawv5$w5_h_tinc)
-describe(mydatawv5$w5_h_tinc)
+summary(df_17$w5_h_tinc)
+describe(df_17$w5_h_tinc)
 
-mydatawv5$inc<-mydatawv5$w5_h_tinc #*12
+df_17$inc<-df_17$w5_h_tinc #*12
 
 
 #############################################################
@@ -710,22 +671,36 @@ mydatawv5$inc<-mydatawv5$w5_h_tinc #*12
 ###########################################################
 
 
-mydatawv5$IHSinc<-asinh(mydatawv5$inc)
-mydatawv5$IHSinc<-as.numeric(mydatawv5$IHSinc) #inverse hyperbolic sine transformation
-mydatawv5<-mydatawv5[!is.na(mydatawv5$IHSinc),]
+df_17$IHSinc<-asinh(df_17$inc)
+df_17$IHSinc<-as.numeric(df_17$IHSinc) #inverse hyperbolic sine transformation
+df_17<-df_17[!is.na(df_17$IHSinc),]
 
 #household size
-mydatawv5$equi_size<-mydatawv5$w5_h_dwlrms
+df_17$equi_size<-df_17$w5_h_dwlrms
 
 
 #IV
 #IV #self-employed
-mydatawv5 <- mydatawv5 %>% mutate(self_employed = ifelse(w5_a_ems<2, 1, 0))
-table(mydatawv5$self_employed)
+df_17 <- df_17 %>% mutate(self_employed = ifelse(w5_a_ems<2, 1, 0))
+table(df_17$self_employed)
+
+
 ```
 
 
 
+
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
 
 
 
@@ -764,6 +739,18 @@ mydata$w_hhid<-sub('.', '', mydata$w_hhid)
 
 ```
 ##RESULTS
+
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
+##################################################################################################################################################################
 
 
 
