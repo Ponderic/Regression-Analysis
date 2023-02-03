@@ -121,6 +121,16 @@ df_12<- df_list_12 %>% reduce(full_join, by='w3_hhid')
 table(df_12$w3_c_dob_y)
 table(df_12$w3_c_dob_m)
 
+#install.packages("zoo")
+
+library(zoo)
+
+df_12$child_age <- as.yearmon(paste(df$w3_c_dob_y, " ", df$w3_c_dob_m), "%Y %m")
+
+table(df_12$child_age)
+#View(df_12$child_age)
+
+
 #year
 colnames(df_12)[colnames(df_12) == "w3_h_intrv_y"] <- "year"
 #str(df_12$w3_h_intrv_y)
